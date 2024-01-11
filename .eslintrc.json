@@ -1,0 +1,38 @@
+{
+  "extends": ["next", "next/core-web-vitals"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "parserOptions": {
+        "project": ["tsconfig.json"],
+        "tsconfigRootDir": "./",
+        "ecmaFeatures": {
+          "jsx": true
+        }
+      },
+      "rules": {
+        "@next/next/no-html-link-for-pages": ["error", "pages"]
+      }
+    }
+  ],
+  "env": {
+    "jest": true
+  },
+  "rules": {
+    "react/self-closing-comp": "error",
+    "react/jsx-sort-props": "warn",
+    "react/jsx-indent": ["warn", 2],
+    "react/jsx-newline": ["warn", { "prevent": true }],
+    "react/jsx-props-no-multi-spaces": "warn",
+    "react/jsx-key": "warn",
+    "@next/next/no-img-element": "off", // fix later
+    "no-restricted-imports": [
+      "error",
+      {
+        // prefer absolute imports
+        "patterns": [".*"]
+      }
+    ]
+  }
+}
