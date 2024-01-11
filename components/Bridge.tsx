@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react';
 import TokenSelectorModal from 'components/TokenSelectorModal';
-import DepositLoading from 'components/DepositLoading';
-import DepositSuccessful from 'components/DepositSuccessful';
-import DepositFailed from 'components/DepositFailed';
-import WithdrawLoading from 'components/WithdrawLoading';
-import WithdrawSuccessful from 'components/WithdrawSuccessful';
 
 import config, {
   GAS_PER_NATIVE_DEPOSIT,
@@ -18,14 +13,16 @@ import {
   WalletState,
   addChainToMetamask,
 } from 'util/transferUtils';
-import { getTokenBalance, calculateGasPrice, BridgeWrapper } from 'util/bridge';
-import { getApprovalAmount, getBalance } from 'util/erc20';
+import { getTokenBalance, OpBridgeWrapper } from 'util/op/bridge';
+import { getApprovalAmount } from 'util/erc20';
 import { getDecimals } from 'util/tokenUtils';
 import { ethers } from 'ethers';
 import { useSigner, useConnect, useSwitchNetwork, chain } from 'wagmi';
 import { InjectedConnector } from 'wagmi/connectors/injected';
 import { cleanNumString, numStringToBigNumber } from 'util/format';
 import { BridgeConfig } from 'config/config';
+import {BridgeInterface} from "../util/bridgeInterface";
+import {NitroBridgeWrapper} from "../util/nitro/nitroBridge";
 
 interface BridgeProps {
   transferType: TransferType;
@@ -66,15 +63,10 @@ const Deposit = (props: BridgeProps) => {
   const [fromBalance, setFromBalance] = useState<string>('');
   const [toBalance, setToBalance] = useState<string>('');
 
-  const bridgeWrapper = new BridgeWrapper(
-    bridgeConfig
-  );
-
-  const [depositLoadingOpen, setDepositLoadingOpen] = useState(false);
-  const [depositSuccessfulOpen, setDepositSuccessfulOpen] = useState(false);
-  const [DepositFailedOpen, setDepositFailedOpen] = useState(false);
-  const [withdrawLoadingOpen, setWithdrawLoadingOpen] = useState(false);
-  const [withdrawSuccessfulOpen, setWithdrawSuccessulOpen] = useState(false);
+  const bridgeWrapper: BridgeInterface = bridgeConfig.type === 'op' ?  new OpBridgeWrapper(
+      bridgeConfig,
+      props.l1AlternativeLogsProvider
+  ) : new NitroBridgeWrapper(bridgeConfig);
 
   // Update chain Id
   useEffect(() => {
@@ -146,9 +138,9 @@ const Deposit = (props: BridgeProps) => {
       } else {
         setSelectedTokenIsApproved(false);
         const selectedTokenAddress = selectedToken.l1.address;
-        const l1GatewayAddress = config.bridgeConfig.l1ERC20Gateway;
+        const l1StandardBridgeAddress = bridgeWrapper.getL1BridgeAddress(selectedToken)
         const userAddress = await signer?.getAddress();
-        const provider = signer?.provider;
+        const provider = new ethers.providers.JsonRpcProvider(selectedToken.l1.rpcURL);
         if (!provider || !userAddress) {
           return;
         }
@@ -156,7 +148,7 @@ const Deposit = (props: BridgeProps) => {
           provider,
           selectedTokenAddress,
           userAddress,
-          l1GatewayAddress
+          l1StandardBridgeAddress
         );
         if (
           Number(approvalAmount) >=
@@ -181,26 +173,6 @@ const Deposit = (props: BridgeProps) => {
         setIsOpen={setModalIsOpen}
         setSelectedToken={setSelectedToken}
         transferType={transferType}
-      />
-      <DepositLoading
-        open={depositLoadingOpen}
-        setOpen={setDepositLoadingOpen}
-      />
-      <DepositSuccessful
-        open={depositSuccessfulOpen}
-        setOpen={setDepositSuccessfulOpen}
-      />
-      <DepositFailed open={DepositFailedOpen} setOpen={setDepositFailedOpen} />
-      <WithdrawLoading
-        open={withdrawLoadingOpen}
-        setOpen={setWithdrawLoadingOpen}
-      />
-      <WithdrawSuccessful
-        open={withdrawSuccessfulOpen}
-        selectedToken={selectedToken}
-        setOpen={setWithdrawSuccessulOpen}
-        switchNetwork={switchNetwork}
-        switchToAccount={props.switchToAccount}
       />
       <div className="mt-6 flex flex-col justify-between">
         <div className="flex flex-col bg-colorTwo h-36 shadow-xl rounded-lg">
@@ -238,10 +210,10 @@ const Deposit = (props: BridgeProps) => {
             You will receive: {`${amount || 0} ${toToken.symbol}`}
           </div>
           <div className="pl-4 pb-4 text-colorSix">
-            {toBalance &&
+            {fromBalance &&
               `Current balance on ${
-                transferType === TransferType.Deposit ? 'L2' : 'L1'
-              }: ${toBalance} ${toToken.symbol}`}
+                transferType === TransferType.Deposit ? 'L1' : 'L2'
+              }: ${fromBalance} ${fromToken.symbol}`}
           </div>
         </div>
         <button
@@ -263,11 +235,6 @@ const Deposit = (props: BridgeProps) => {
               amount,
               transferType,
               bridgeWrapper,
-              setDepositLoadingOpen,
-              setDepositSuccessfulOpen,
-              setDepositFailedOpen,
-              setWithdrawLoadingOpen,
-              setWithdrawSuccessulOpen
             )
           }
         >
@@ -284,11 +251,10 @@ const Deposit = (props: BridgeProps) => {
           className="text-[18px] font-custom text-colorSix font-medium mt-6 hover:text-colorSeven hover:font-medium"
           onClick={() =>
             {if (transferType === TransferType.Deposit) {
-              // FIXME: we assume all chains use 18 decimals for their native token
-              addChainToMetamask(tokens[0].l1, 18, tokens[0].tokenName);
+              addChainToMetamask(tokens[0].l1, 18, 'Ether', 'ETH');
             } else {
               // FIXME: we assume all chains use 18 decimals for their native token
-              addChainToMetamask(tokens[0].l2, 18, tokens[0].tokenName);
+              addChainToMetamask(tokens[0].l2, 18, tokens[0].tokenName, tokens[0].l2.symbol);
             }}
           }
         >

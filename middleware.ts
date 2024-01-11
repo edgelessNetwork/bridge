@@ -14,25 +14,27 @@ export const config = {
   ],
 };
 
+const CALDERA_DOMAINS_REGEXS = [
+  /.*\.calderabridge.xyz/,
+  /.*\.constellationbridge.xyz/,
+  /.*\.calderabridge-test.xyz/,
+  /.*\.calderabridge-nitro.xyz/,
+  /.*\.localhost:3000/,
+
+];
+
 export default async function middleware(req: NextRequest) {
   const ROOT_HOSTNAME: string = process.env.ROOT_HOSTNAME!;
-  // FIXME: quick hack to allow for an alternative prod root hostname
-  const ROOT_HOSTNAME_ALT: string = process.env.ROOT_HOSTNAME_ALT ?? '';
   const url = req.nextUrl;
 
   // Get hostname (e.g. vercel.com, test.vercel.app, etc.)
   const hostname = req.headers.get('host') || ROOT_HOSTNAME;
+  const hostnameIsCaldera = CALDERA_DOMAINS_REGEXS.some((regexp) =>
+    regexp.test(hostname)
+  );
 
-  // If localhost, assign the host value manually
-  // If prod, get the custom domain/subdomain value by removing the root URL
-  // (in the case of "test.vercel.app", "vercel.app" is the root URL)
-  const currentHost =
-    process.env.NODE_ENV === 'production' && process.env.VERCEL === '1'
-      ? hostname
-          .replace(`.${ROOT_HOSTNAME}`, '')
-          .replace(`.${ROOT_HOSTNAME_ALT}`, '')
-      : hostname.replace(`.localhost:3000`, '');
-
+  // If using Caldera domain, get the name, else use the entire hostname
+  const currentHost = hostnameIsCaldera ? hostname.split('.')[0] : hostname;
   // rewrite every matched path to the `/_sites/[site] dynamic route
   url.pathname = `/_multitenant/${currentHost}${url.pathname}`;
   return NextResponse.rewrite(url);

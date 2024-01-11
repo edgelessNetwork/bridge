@@ -8,7 +8,7 @@ export const getApprovalAmount = async (
   spender: string
 ) => {
   const ERC20 = new ethers.Contract(erc20Address, ERC20abi, provider);
-  return ERC20.allowance(owner, spender);
+  return await ERC20.allowance(owner, spender);
 };
 
 export const getBalance = async (
@@ -17,14 +17,20 @@ export const getBalance = async (
   address: string
 ) => {
   const ERC20 = new ethers.Contract(erc20Address, ERC20abi, provider);
-  return ERC20.balanceOf(address);
+  let balance;
+  try {
+    balance = await ERC20.balanceOf(address);
+  } catch (error) {
+    balance = 0;
+  }
+  return balance
 };
 
 export const approve = async (
   signer: ethers.Signer,
   erc20Address: string,
   spender: string,
-  amount: ethers.BigNumber = ethers.constants.MaxUint256
+  amount: ethers.BigNumber,
 ) => {
   const ERC20 = new ethers.Contract(erc20Address, ERC20abi, signer);
   return ERC20.approve(spender, amount);

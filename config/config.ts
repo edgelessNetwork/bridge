@@ -1,15 +1,11 @@
-import { UseBlockNumberConfig } from "wagmi/dist/declarations/src/hooks/network-status/useBlockNumber";
-
 export const GAS_PER_NATIVE_DEPOSIT = 142589;
 
 export interface TokenInfo {
-  // TODO: remove this field
   chainId: number;
   address: string;
   name: string;
   symbol: string;
   logoURI: string;
-  // TODO: remove this field
   rpcURL: string;
   decimals?: number; // overrides the decimals set in Token for a specific L1/L2 pair
 }
@@ -22,11 +18,27 @@ export interface Token {
   isNative: boolean;
 }
 
-export interface BridgeConfig {
+export interface OpConfig {
+  optimismPortal?: string,
+  l2OutputOracle?: string,
+  addressManager: string;
+  l1CrossDomainMessenger: string;
+  l1StandardBridge: string;
+  l1ERC721Bridge?: string;
+  stateCommitmentChain?: string;
+  canonicalTransactionChain?: string;
+  bondManager?: string;
+  l1RPCUrl?: string;
+  l2RPCUrl?: string;
+  type: 'op'
+}
+
+export interface NitroBridgeConfig {
   l1ChainId: number;
   l2ChainId: number;
   l1RPCUrl: string;
   l2RPCUrl: string;
+  nativeToken?: string;
   bridge: string;
   inbox: string;
   outbox: string;
@@ -46,7 +58,10 @@ export interface BridgeConfig {
   l2ProxyAdmin: string;
   l2Weth: string;
   l2WethGateway: string;
+  type: 'nitro'
 }
+
+export type BridgeConfig = OpConfig | NitroBridgeConfig;
 
 interface configFile {
   tokens: Token[];
@@ -56,30 +71,19 @@ interface configFile {
 var config = {
   tokens: [],
   bridgeConfig: {
-    l1ChainId: 0,
-    l2ChainId: 0,
+    optimismPortal: '',
+    l2OutputOracle: '',
+    addressManager: '',
+    l1CrossDomainMessenger: '',
+    l1StandardBridge: '',
+    l1ERC721Bridge: '',
+    stateCommitmentChain: '',
+    canonicalTransactionChain: '',
+    bondManager: '',
     l1RPCUrl: '',
     l2RPCUrl: '',
-    bridge: '',
-    inbox: '',
-    outbox: '',
-    rollup: '',
-    sequencerInbox: '',
-    l1CustomGateway: '',
-    l1ERC20Gateway: '',
-    l1GatewayRouter: '',
-    l1MultiCall: '',
-    l1ProxyAdmin: '',
-    l1Weth: '',
-    l1WethGateway: '',
-    l2CustomGateway: '',
-    l2ERC20Gateway: '',
-    l2GatewayRouter: '',
-    l2Multicall: '',
-    l2ProxyAdmin: '',
-    l2Weth: '',
-    l2WethGateway: '',
-  }
+    type: 'op',
+  },
 } as configFile;
 export default config;
 

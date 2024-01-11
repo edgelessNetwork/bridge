@@ -1,15 +1,13 @@
 import { Token, TokenInfo } from 'config/config';
-import { Dispatch, SetStateAction, useState, Fragment } from 'react';
 import { ConnectArgs } from '@wagmi/core/dist/declarations/src/actions/accounts/connect';
 
-import { getTransferAmountAndErrorCheck, BridgeWrapper, RichBridgeMessage, depositStatusToString, withdrawalStatusToString, ethDepositStatusToString } from 'util/bridge';
+import { getTransferAmountAndErrorCheck } from 'util/op/bridge';
 import { toast } from 'react-toastify';
 import * as notifStyles from 'misc/notifStyles';
-import config from 'config/config';
 import { approve } from 'util/erc20';
 import { getDecimals } from "util/tokenUtils"
 import { ethers } from 'ethers';
-import { EthDepositStatus, L1ToL2MessageStatus, L2ToL1MessageStatus } from '@arbitrum/sdk';
+import {BridgeInterface} from "./bridgeInterface";
 
 enum WalletState {
   Disonnected,
@@ -60,12 +58,7 @@ const transferNative = async (
   decimals: number,
   transferType: TransferType,
   selectedToken: Token,
-  bridgeWrapper: BridgeWrapper,
-  setDepositLoadingOpen: any,
-  setDepositSuccessfulOpen: any,
-  setDepositFailedOpen: any,
-  setWithdrawLoadingOpen: any,
-  setWithdrawSuccessfulOpen: any
+  bridgeWrapper: BridgeInterface,
 ) => {
   // TODO: check balance and surface errors
   const transferAmount = getTransferAmountAndErrorCheck(
@@ -83,35 +76,6 @@ const transferNative = async (
     selectedToken,
     transferType
   );
-  if (transferType === TransferType.Deposit) {
-    setDepositLoadingOpen(true);
-    let intervalId = setInterval(async function () {
-      const address = await signer.getAddress();
-      const deposits = await bridgeWrapper.getDepositsForAddress(
-        address,
-        selectedToken
-      );
-      if (deposits[0].status ===  ethDepositStatusToString(EthDepositStatus.DEPOSITED)) {
-        setDepositLoadingOpen(false);
-        setDepositSuccessfulOpen(true);
-        clearInterval(intervalId);
-      }
-    }, 10000);  
-  } else if (transferType === TransferType.Withdraw) {
-    setWithdrawLoadingOpen(true);
-    let intervalId = setInterval(async function () {
-      const address = await signer.getAddress();
-      const withdrawals = await bridgeWrapper.getWithdrawalsForAddress(
-        address,
-        selectedToken
-      );
-      if (withdrawals[0].status === withdrawalStatusToString(L2ToL1MessageStatus.CONFIRMED)) {
-        setWithdrawLoadingOpen(false);
-        setWithdrawSuccessfulOpen(true);
-        clearInterval(intervalId);
-      }
-    }, 10000);
-  }
 };
 
 const transferERC = async (
@@ -119,12 +83,7 @@ const transferERC = async (
   amount: string,
   selectedToken: Token,
   transferType: TransferType,
-  bridgeWrapper: BridgeWrapper,
-  setDepositLoadingOpen: any,
-  setDepositSuccessfulOpen: any,
-  setDepositFailedOpen: any,
-  setWithdrawLoadingOpen: any,
-  setWithdrawSuccessfulOpen: any
+  bridgeWrapper: BridgeInterface,
 ) => {
   const fromToken = parseFromToken(selectedToken, transferType);
   // TODO: check balance and surface errors
@@ -153,40 +112,6 @@ const transferERC = async (
     transferType
   );
 
-  if (transferType === TransferType.Deposit) {
-    setDepositLoadingOpen(true);
-    let intervalId = setInterval(async function () {
-      const address = await signer.getAddress();
-      const deposits = await bridgeWrapper.getDepositsForAddress(
-        address,
-        selectedToken
-      );
-      if (deposits[0].status === depositStatusToString(L1ToL2MessageStatus.REDEEMED) ) {
-        setDepositLoadingOpen(false);
-        setDepositSuccessfulOpen(true);
-        clearInterval(intervalId);
-      } else if (deposits[0].status === depositStatusToString(L1ToL2MessageStatus.CREATION_FAILED)) {
-        setDepositLoadingOpen(false);
-        setDepositFailedOpen(true);
-        clearInterval(intervalId);
-      }
-    }, 10000);  
-  } else if (transferType === TransferType.Withdraw) {
-    setWithdrawLoadingOpen(true);
-    let intervalId = setInterval(async function () {
-      const address = await signer.getAddress();
-      const withdrawals = await bridgeWrapper.getWithdrawalsForAddress(
-        address,
-        selectedToken
-      );
-      if (withdrawals[0].status === withdrawalStatusToString(L2ToL1MessageStatus.CONFIRMED)) {
-        setWithdrawLoadingOpen(false);
-        setWithdrawSuccessfulOpen(true);
-        clearInterval(intervalId);
-      }
-    }, 10000);
-  }
-
 };
 
 const transferButton = async (
@@ -199,12 +124,7 @@ const transferButton = async (
   signer: any,
   amount: string,
   transferType: TransferType,
-  bridgeWrapper: BridgeWrapper,
-  setDepositLoadingOpen: any,
-  setDepositSuccessfulOpen: any,
-  setDepositFailedOpen: any,
-  setWithdrawLoadingOpen: any,
-  setWithdrawSuccessfulOpen: any
+  bridgeWrapper: BridgeInterface,
 
 ) => {
   const fromToken = parseFromToken(selectedToken, transferType);
@@ -223,21 +143,21 @@ const transferButton = async (
           transferType,
           selectedToken,
           bridgeWrapper,
-          setDepositLoadingOpen,
-          setDepositSuccessfulOpen,
-          setDepositFailedOpen,
-          setWithdrawLoadingOpen,
-          setWithdrawSuccessfulOpen
         );
       } else {
-        transferERC(signer, amount, selectedToken, transferType, bridgeWrapper, setDepositLoadingOpen, setDepositSuccessfulOpen, setDepositFailedOpen, setWithdrawLoadingOpen, setWithdrawSuccessfulOpen);
+        transferERC(signer, amount, selectedToken, transferType, bridgeWrapper);
       }
     } else {
       try {
+        const transferAmount = getTransferAmountAndErrorCheck(signer, amount, getDecimals(selectedToken, transferType === TransferType.Deposit));
+        if (!transferAmount) {
+          throw new Error('Invalid transfer amount');
+        }
         await approveBridgeTransfer(
           signer,
           parseFromToken(selectedToken, transferType),
-          bridgeWrapper.bridgeConfig.l1ERC20Gateway
+          bridgeWrapper.getL1BridgeAddress(selectedToken),
+          transferAmount,
         );
         setSelectedTokenIsApproved(true);
       } catch (error) {
@@ -250,15 +170,16 @@ const transferButton = async (
 const approveBridgeTransfer = async (
   signer: any,
   fromToken: TokenInfo,
-  l1GatewayAddress: string
+  l1StandardBridge: string,
+  amount: ethers.BigNumber,
 ) => {
   if (!signer) {
     toast.error(notifStyles.msg.sig, notifStyles.standard); // TODO: cleaner
   }
-  await approve(signer!, fromToken.address, l1GatewayAddress);
+  await approve(signer!, fromToken.address, l1StandardBridge, amount);
 };
 
-async function addChainToMetamask(chain: any, decimals: Number, tokenName: String) {
+async function addChainToMetamask(chain: any, decimals: Number, tokenName: String, tokenSymbol: String) {
   // @ts-ignore
   let ethereum: any = window.ethereum!;
   let chainIdHex = ethers.utils.hexValue(BigInt((chain.chainId).toString()))
@@ -281,7 +202,7 @@ async function addChainToMetamask(chain: any, decimals: Number, tokenName: Strin
               rpcUrls: [chain.rpcURL],
               nativeCurrency: {
                 name: tokenName,
-                symbol: tokenName, // 2-6 characters long
+                symbol: tokenSymbol, // 2-6 characters long
                 decimals: decimals,
               },
             },

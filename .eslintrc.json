@@ -26,13 +26,6 @@
     "react/jsx-newline": ["warn", { "prevent": true }],
     "react/jsx-props-no-multi-spaces": "warn",
     "react/jsx-key": "warn",
-    "@next/next/no-img-element": "off", // fix later
-    "no-restricted-imports": [
-      "error",
-      {
-        // prefer absolute imports
-        "patterns": [".*"]
-      }
-    ]
+    "@next/next/no-img-element": "off"
   }
 }

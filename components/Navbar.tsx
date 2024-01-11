@@ -10,25 +10,6 @@ interface Link {
   href: string;
 }
 
-const LINKS = [
-  {
-    title: 'About',
-    href: 'https://caldera.xyz/',
-  },
-  {
-    title: 'Docs',
-    href: 'https://calderaxyz.gitbook.io/caldera-documentation/getting-started/overview/',
-  },
-  {
-    title: 'Twitter',
-    href: 'https://twitter.com/Calderaxyz',
-  },
-  {
-    title: 'Discord',
-    href: 'https://discord.gg/0xconstellation',
-  },
-];
-
 const Navbar = (props: clientConfigProps) => {
   const [expanded, setExpanded] = useState(false);
   const { address, isConnected } = useAccount();
@@ -39,14 +20,12 @@ const Navbar = (props: clientConfigProps) => {
   const { open, setOpen } = useModal();
   const { chain } = useNetwork();
 
-  console.log(props);
   const SUPPORTED_NETWORKS = props?.config
     ? JSON.parse(props.config).tokens.flatMap((token: any) => [
         token.l1.chainId,
         token.l2.chainId,
       ])
     : [];
-  console.log(SUPPORTED_NETWORKS);
 
   return (
     <header className="py-4 bg-colorOne shadow">

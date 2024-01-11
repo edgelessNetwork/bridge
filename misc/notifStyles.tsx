@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ToastContainer, ToastOptions } from 'react-toastify';
-import { getTxUrl } from '../util/bridge';
+import { getTxUrl } from '../util/op/bridge';
 
 const submitted = (hash: string, rpcURL: string) => {
   hash = hash.slice(0, 6) + '...' + hash.slice(-4);

@@ -6,7 +6,8 @@ import { TransferType } from 'util/transferUtils';
 
 const Main = ({
   switchToAccount,
-  bridgeConfig
+  bridgeConfig,
+  l1AlternativeLogsProvider,
 }: {
   switchToAccount: Function;
   bridgeConfig: BridgeConfig;
@@ -47,6 +48,7 @@ const Main = ({
         </div>
         <Bridge
           bridgeConfig={bridgeConfig}
+          l1AlternativeLogsProvider={l1AlternativeLogsProvider}
           switchToAccount={switchToAccount}
           transferType={transferType}
         />

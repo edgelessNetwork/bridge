@@ -9,7 +9,7 @@ import {
   clientConfigProps,
   getServerSideProps as GSSP,
 } from 'pages/_multitenant/[site]';
-import { customColorNames } from 'config/config';
+import {BridgeConfig, customColorNames} from 'config/config';
 
 enum Page {
   MAIN,
@@ -33,8 +33,13 @@ const Home: NextPage<clientConfigProps> = (props) => {
 
   const config = JSON.parse(props.config);
 
-  const bridgeConfig = config.bridgeConfig;
+  const bridgeConfig: BridgeConfig = config.bridgeConfig;
+  bridgeConfig.type = props.type;
   const l1ChainId = config.tokens[0]?.l1?.chainId!;
+  const l1AlternativeLogsProvider: string | undefined =
+    config.tokens[0]?.l1?.getLogsProvider;
+
+  console.log('Alternative logs provider', l1AlternativeLogsProvider);
   // Set colors from the subdomain config fetched from db client-side
   useEffect(() => {
     // colors
@@ -71,12 +76,13 @@ const Home: NextPage<clientConfigProps> = (props) => {
         {page === Page.MAIN ? (
           <Main
             bridgeConfig={bridgeConfig}
+            l1AlternativeLogsProvider={l1AlternativeLogsProvider}
             switchToAccount={switchToAccount}
           />
         ) : (
           <Account
             bridgeConfig={bridgeConfig}
-            // Parker TODO: Remove
+            l1AlternativeLogsProvider={l1AlternativeLogsProvider}
             l1ChainId={l1ChainId}
             switchToMain={switchToMain}
           />
