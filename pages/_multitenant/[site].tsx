@@ -38,6 +38,23 @@ export const getServerSideProps = async (context: {
     type: 'nitro',
   };
 
+  const opconfig = {
+    id: 'edgeless-op',
+    logo: { $binary: { base64: '', subType: '00' } },
+    wordmark: { $binary: { base64: '', subType: '00' } },
+    config:
+      '{"tokens":[{"tokenName":"Ether","l1":{"chainId":11155111,"address":"0x0000000000000000000000000000000000000000","name":"sepolia","symbol":"ETH","decimals":18,"logoURI":"https://dashboard.caldera.xyz/svgs/tokens/ETH.svg"},"l2":{"chainId":2067124,"address":"0x0000000000000000000000000000000000000000","name":"edgeless-op","symbol":"ETH","logoURI":"https://dashboard.caldera.xyz/svgs/tokens/ETH.svg"},"decimals":18,"isNative":true}],"bridgeConfig":{"addressManager":"0xfb74Ef8c0eE420BE4951F36d38d83B7DDE846aBF","l1CrossDomainMessenger":"0xfCd810Ba67230B3fDB9CE00D773Ee29eb4e26Bb9","l1StandardBridge":"0x2aff8fd3f9d46C3Cf4993CcD7259021b0F898A04","optimismPortal":"0x8f8cC1997FAf2E7C70d7eaf391d1187D851A14f3","l2OutputOracle":"0xE5C204BA22Dacd05eE236a79e49fcf1d7d632CE0","l1RPCUrl":"https://eth-sepolia.g.alchemy.com/v2/BQ43RWiHw-hqyM4NVLrzcYSm-ybT5tYN","l2RPCUrl":"https://edgeless-op.rpc.caldera.xyz/http"}}',
+    colorOne: 'rgb(255, 255, 255)',
+    colorTwo: 'rgb(249, 250, 251)',
+    colorThree: 'rgb(229, 231, 235)',
+    colorFour: 'rgb(209, 213, 219)',
+    colorFive: 'rgb(17, 24, 39)',
+    colorSix: 'rgb(156, 163, 175)',
+    colorSeven: 'rgb(0, 0, 0)',
+    colorEight: 'rgba(255, 255, 255, 0.5)',
+    type: 'op',
+  };
+
   // show 404 if the user is accessing an invalid subdomain
   if (!fetchedConfig) {
     return {
