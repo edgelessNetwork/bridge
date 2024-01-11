@@ -9,7 +9,24 @@ interface Link {
   title: string;
   href: string;
 }
-
+const LINKS = [
+  {
+    title: 'About',
+    href: 'https://caldera.xyz/',
+  },
+  {
+    title: 'Docs',
+    href: 'https://calderaxyz.gitbook.io/caldera-documentation/getting-started/overview/',
+  },
+  {
+    title: 'Twitter',
+    href: 'https://twitter.com/Calderaxyz',
+  },
+  {
+    title: 'Discord',
+    href: 'https://discord.gg/0xconstellation',
+  },
+];
 const Navbar = (props: clientConfigProps) => {
   const [expanded, setExpanded] = useState(false);
   const { address, isConnected } = useAccount();
