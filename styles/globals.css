@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  min-height: 100vh;
+  background: #f4f7fa;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@font-face {
+  font-family: 'CustomFont';
+  src: url('/fonts/Rubik-VariableFont_wght.ttf');
+}
+
+:root {
+  /* navBarAndModal Bg */
+  --colorOne: rgb(255, 255, 255);
+  /* transferModal innerModal Bg */
+  --colorTwo: rgb(249, 250, 251);
+
+  /* tokenSelector button Bg */
+  --colorThree: rgb(229, 231, 235);
+  /* tokenSelector button Hover */
+  --colorFour: rgb(209, 213, 219);
+
+  /* navBar textColor */
+  --colorFive: rgb(17, 24, 39);
+  /* transferModal unselected textColor */
+  --colorSix: rgb(156, 163, 175);
+  /* transferModal selected textColor */
+  --colorSeven: rgb(0, 0, 0);
+
+  /* tokenSelector overlay Bg */
+  --colorEight: rgba(255, 255, 255, 0.5);
+}

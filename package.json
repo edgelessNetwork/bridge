@@ -1,0 +1,49 @@
+{
+  "name": "@caldera-xyz/bridge-ui",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "prisma generate && next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write \"{,!(node_modules)/**/}*.{js,jsx,ts,tsx,json,css,html}\""
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.363.0",
+    "@constellation-labs/arbitrum-sdk": "0.0.1-alpha",
+    "@constellation-labs/bedrock-sdk": "^1.1.1",
+    "@constellation-labs/contracts": "^0.7.8",
+    "@constellation-labs/core-utils": "^0.7.8",
+    "@headlessui/react": "^1.6.6",
+    "@headlessui/tailwindcss": "^0.1.0",
+    "@heroicons/react": "^2.0.16",
+    "@prisma/client": "4.7.0",
+    "connectkit": "^0.0.2",
+    "ethers": "^5.7.0",
+    "moment": "^2.29.4",
+    "next": "12.2.5",
+    "next-fonts": "^1.5.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-spinners": "^0.13.8",
+    "react-toastify": "^9.0.8",
+    "wagmi": "^0.6.4"
+  },
+  "devDependencies": {
+    "@svgr/webpack": "^6.5.1",
+    "@types/node": "18.7.14",
+    "@types/react": "18.0.18",
+    "@types/react-dom": "18.0.6",
+    "autoprefixer": "^10.4.8",
+    "eslint": "8.23.0",
+    "eslint-config-next": "12.2.5",
+    "postcss": "^8.4.16",
+    "prettier": "2.7.1",
+    "prisma": "^4.7.0",
+    "tailwindcss": "^3.1.8",
+    "ts-node": "10.9.1",
+    "typescript": "4.8.2",
+    "vivid-studio": "^0.11.1"
+  }
+}
