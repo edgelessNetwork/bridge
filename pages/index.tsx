@@ -61,7 +61,7 @@ const Home: NextPage<clientConfigProps> = (props) => {
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen font-bridge bg-primaryBg">
       <>
         <Head>
           <title>Bridge</title>
