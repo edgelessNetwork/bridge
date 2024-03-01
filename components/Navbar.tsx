@@ -4,6 +4,7 @@ import { InjectedConnector } from 'wagmi/connectors/injected';
 import { useModal } from 'connectkit';
 import config from 'config/config';
 import { clientConfigProps } from 'pages/_multitenant/[site]';
+import Link from 'next/link';
 
 interface Link {
   title: string;
@@ -45,13 +46,13 @@ const Navbar = (props: clientConfigProps) => {
     : [];
 
   return (
-    <header className="py-4 bg-colorOne shadow">
-      <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+    <header className="py-4 w-full bg-primaryBg shadow text-white">
+      <div className="px-4 mx-auto sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          <div className="flex-shrink-0">
+          <div className="w-fit">
             <span className="inline-block lg:hidden mr-4">
               <button
-                className="text-colorFive"
+                className="text-white"
                 onClick={() => setExpanded(!expanded)}
                 type="button"
               >
@@ -95,6 +96,19 @@ const Navbar = (props: clientConfigProps) => {
                 </span>
               </button>
             </span>
+            <Link 
+            className="max-lg:hidden"
+            href={'/'}>
+              <div className='cursor-pointer flex flex-nowrap gap-4'>
+                <img
+                alt="Edgeless network"
+                className="max-w-full aspect-[3.57] w-[108px] "
+                loading="lazy"
+                src="https://cdn.builder.io/api/v1/image/assets/TEMP/33249cd15af91da23f6148bb8f3775f76a32f5e469e401b8e3cb7d4815fc676f?"
+              />
+                <div className="text-lg font-bold">Bridge</div>
+              </div>
+            </Link>
           </div>
           <nav className="lg:flex lg:items-center lg:justify-end lg:space-x-6">
             {chain && !SUPPORTED_NETWORKS.includes(chain.id) && (
@@ -138,7 +152,7 @@ const Navbar = (props: clientConfigProps) => {
                         text-colorFive
                         transition-all
                         duration-200
-                        bg-transparent
+                        bg-primaryGreen
                         border border-colorFive
                         rounded-xl
                         font-pj
