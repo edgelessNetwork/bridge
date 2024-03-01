@@ -209,7 +209,14 @@ const Deposit = (props: BridgeProps) => {
               value={amount}
             />
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-between">
+            <div className="flex items-end justify-center">
+              {amount.length > 0 && (
+                <div className="text-sm text-secondaryGreenText font-bridge">
+                  ${'3,268.70'} {/* Convert balance to USD? */}
+                </div>
+              )}
+            </div>
             <div
               className="text-2xl ml-6 flex bg-primaryBg text-white p-2 shadow-xl rounded-full cursor-pointer hover:bg-colorFour"
               onClick={() => setModalIsOpen(true)}
@@ -233,7 +240,7 @@ const Deposit = (props: BridgeProps) => {
           <div className="pb-4 font-colorSeven font-bridge text-colorSix">
             You recive
           </div>
-          <div className="text-4xl text-colorSix">{`${amount || 0.00}`}</div>
+          <div className="text-4xl text-colorSix">{`${amount || 0.0}`}</div>
           <div className="flex justify-end">
             <div className="text-2xl ml-6 flex bg-primaryBg text-white p-2 shadow-xl rounded-full cursor-pointer hover:bg-colorFour">
               <img
@@ -277,7 +284,8 @@ const Deposit = (props: BridgeProps) => {
         </button>
         <div className="flex justify-center">
           <button
-className="justify-center items-center self-stretch px-16 py-4 text-sm font-semibold tracking-tight leading-3 uppercase whitespace-nowrap bg-gray-200 rounded-xl w-full text-zinc-900 max-md:px-5"            onClick={() => {
+            className="justify-center items-center self-stretch px-16 py-4 text-sm font-semibold tracking-tight leading-3 uppercase whitespace-nowrap bg-gray-200 rounded-xl w-full text-zinc-900 max-md:px-5"
+            onClick={() => {
               if (transferType === TransferType.Deposit) {
                 addChainToMetamask(tokens[0].l1, 18, 'Ether', 'ETH');
               } else {
