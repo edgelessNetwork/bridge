@@ -72,7 +72,7 @@ const Home: NextPage<clientConfigProps> = (props) => {
           />
           <link href="/favicon.png" rel="icon" />
         </Head>
-        <Navbar {...props} />
+        <Navbar {...props} switchToMain={switchToMain} switchToAccount={switchToAccount} />
         {page === Page.MAIN ? (
           <Main
             bridgeConfig={bridgeConfig}

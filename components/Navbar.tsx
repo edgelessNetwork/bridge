@@ -28,7 +28,14 @@ const LINKS = [
     href: 'https://discord.gg/0xconstellation',
   },
 ];
-const Navbar = (props: clientConfigProps) => {
+
+interface NavBarProps {
+  config: clientConfigProps,
+  switchToAccount: () => void,
+  switchToMain: () => void,
+};
+
+const Navbar = ({config, switchToAccount, switchToMain}: NavBarProps) => {
   const [expanded, setExpanded] = useState(false);
   const { address, isConnected } = useAccount();
   const { connect } = useConnect({
@@ -38,8 +45,8 @@ const Navbar = (props: clientConfigProps) => {
   const { open, setOpen } = useModal();
   const { chain } = useNetwork();
 
-  const SUPPORTED_NETWORKS = props?.config
-    ? JSON.parse(props.config).tokens.flatMap((token: any) => [
+  const SUPPORTED_NETWORKS = config.config
+    ? JSON.parse(config.config).tokens.flatMap((token: any) => [
         token.l1.chainId,
         token.l2.chainId,
       ])
@@ -96,9 +103,9 @@ const Navbar = (props: clientConfigProps) => {
                 </span>
               </button>
             </span>
-            <Link 
+            <div 
             className="max-lg:hidden"
-            href={'/'}>
+            onClick={switchToMain}>
               <div className='cursor-pointer flex flex-nowrap gap-4'>
                 <img
                 alt="Edgeless network"
@@ -108,37 +115,10 @@ const Navbar = (props: clientConfigProps) => {
               />
                 <div className="text-lg font-bold">Bridge</div>
               </div>
-            </Link>
+            </div>
           </div>
           <nav className="lg:flex lg:items-center lg:justify-end lg:space-x-6">
-            {chain && !SUPPORTED_NETWORKS.includes(chain.id) && (
-              <a
-                className="
-                        inline-flex
-                        items-center
-                        justify-center
-                        px-5
-                        py-2
-                        text-base
-                        leading-7
-                        text-colorFive
-                        transition-all
-                        duration-200
-                        bg-transparent
-                        border border-colorFive
-                        rounded-xl
-                        font-pj
-                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-colorFive
-                        hover:bg-colorFive hover:text-colorOne
-                        focus:bg-colorFive focus:text-colorOne
-                    "
-                href="#"
-                role="button"
-                title=""
-              >
-                Unsupported Network!
-              </a>
-            )}
+            
             <a
               className="
                         inline-flex
@@ -161,7 +141,7 @@ const Navbar = (props: clientConfigProps) => {
                         focus:bg-colorFive focus:text-colorOne
                     "
               href="#"
-              onClick={() => (isConnected ? disconnect() : connect())}
+              onClick={() => (isConnected ? switchToAccount() : connect())}
               role="button"
               title=""
             >

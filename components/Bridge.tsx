@@ -182,6 +182,8 @@ const Deposit = (props: BridgeProps) => {
     main();
   }, [signer, selectedToken, amount, setSelectedTokenIsApproved]);
 
+  const displayAddChainButton =  walletState === WalletState.Connected && chainId !== 11155111 && chainId !== 202;
+  
   return (
     <>
       <TokenSelectorModal
@@ -211,11 +213,11 @@ const Deposit = (props: BridgeProps) => {
           </div>
           <div className="flex justify-between">
             <div className="flex items-end justify-center">
-              {amount.length > 0 && (
+              {/* {amount.length > 0 && (
                 <div className="text-sm text-secondaryGreenText font-bridge">
-                  ${'3,268.70'} {/* Convert balance to USD? */}
+                  ${'3,268.70'} {/* Convert balance to USD? 
                 </div>
-              )}
+              )} */}
             </div>
             <div
               className="text-2xl ml-6 flex bg-primaryBg text-white p-2 shadow-xl rounded-full cursor-pointer hover:bg-colorFour"
@@ -258,7 +260,7 @@ const Deposit = (props: BridgeProps) => {
                 rounded-xl
                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-colorFive
                         hover:brightness-125 hover:text-colorOne
-                        focus:bg-colorFive focus:text-colorOne"
+                        "
           onClick={() =>
             transferButton(
               walletState,
@@ -282,26 +284,29 @@ const Deposit = (props: BridgeProps) => {
             transferType
           )}
         </button>
-        <div className="flex justify-center">
-          <button
-            className="justify-center items-center self-stretch px-16 py-4 text-sm font-semibold tracking-tight leading-3 uppercase whitespace-nowrap bg-gray-200 rounded-xl w-full text-zinc-900 max-md:px-5"
-            onClick={() => {
-              if (transferType === TransferType.Deposit) {
-                addChainToMetamask(tokens[0].l1, 18, 'Ether', 'ETH');
-              } else {
-                // FIXME: we assume all chains use 18 decimals for their native token
-                addChainToMetamask(
-                  tokens[0].l2,
-                  18,
-                  tokens[0].tokenName,
-                  tokens[0].l2.symbol
-                );
-              }
-            }}
-          >
-            Add chain to Metamask
-          </button>
-        </div>
+        {displayAddChainButton && (
+          <div className="flex justify-center">
+            <button
+              className="justify-center items-center self-stretch px-16 py-4 text-sm font-semibold tracking-tight leading-3 uppercase whitespace-nowrap bg-gray-200 rounded-xl w-full text-zinc-900 max-md:px-5"
+              onClick={() => {
+                if (transferType === TransferType.Deposit) {
+                  addChainToMetamask(tokens[0].l1, 18, 'Ether', 'ETH');
+                } else {
+                  // FIXME: we assume all chains use 18 decimals for their native token
+                  addChainToMetamask(
+                    tokens[0].l2,
+                    18,
+                    tokens[0].tokenName,
+                    tokens[0].l2.symbol
+                  );
+                }
+              }}
+            >
+              Add chain to Metamask
+            </button>
+          </div>
+        )}
+
         <h2 className="font-custom text-sm text-center text-colorSix mt-8">
           Note: You need to add the chain to Metamask before bridging from the
           chain.
