@@ -14,7 +14,6 @@ import { Paginator } from './Paginator';
 const DEFAULT_NUM_MESSAGES = 5;
 
 
-
 // Table of user's past transactions
 // Lists deposits if isDepositMode === true, else lists withdrawals
 const TransactionList = ({

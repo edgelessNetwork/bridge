@@ -56,7 +56,3 @@ const MyAccount = ({
 export default MyAccount;
 
 
-import * as React from "react";
-
-
-

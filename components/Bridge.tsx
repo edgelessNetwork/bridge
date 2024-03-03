@@ -182,7 +182,7 @@ const Deposit = (props: BridgeProps) => {
     main();
   }, [signer, selectedToken, amount, setSelectedTokenIsApproved]);
 
-  const displayAddChainButton =  walletState === WalletState.Connected && chainId !== 11155111 && chainId !== 202;
+  const displayAddChainButton =  walletState === WalletState.Connected && chainId !== tokens[0].l1.chainId && chainId !== tokens[0].l2.chainId;
   
   return (
     <>
@@ -290,12 +290,12 @@ const Deposit = (props: BridgeProps) => {
               className="justify-center items-center self-stretch px-16 py-4 text-sm font-semibold tracking-tight leading-3 uppercase whitespace-nowrap bg-gray-200 rounded-xl w-full text-zinc-900 max-md:px-5"
               onClick={() => {
                 if (transferType === TransferType.Deposit) {
-                  addChainToMetamask(tokens[0].l1, 18, 'Ether', 'ETH');
+                  addChainToMetamask(tokens[0].l1, tokens[0].l1.decimals || 18, tokens[0].l1.name, tokens[0].l1.symbol);
                 } else {
-                  // FIXME: we assume all chains use 18 decimals for their native token
+                  // FIXME: we assume all chains use tokens[0].l1.decimals || 18 decimals for their native token
                   addChainToMetamask(
                     tokens[0].l2,
-                    18,
+                    tokens[0].l1.decimals || 18,
                     tokens[0].tokenName,
                     tokens[0].l2.symbol
                   );
@@ -306,7 +306,6 @@ const Deposit = (props: BridgeProps) => {
             </button>
           </div>
         )}
-
         <h2 className="font-custom text-sm text-center text-colorSix mt-8">
           Note: You need to add the chain to Metamask before bridging from the
           chain.

@@ -108,7 +108,7 @@ const Navbar = ({config, switchToAccount, switchToMain}: NavBarProps) => {
             onClick={switchToMain}>
               <div className='cursor-pointer flex flex-nowrap gap-4'>
                 <img
-                alt="Edgeless network"
+                alt="Edgeless Network"
                 className="max-w-full aspect-[3.57] w-[108px] "
                 loading="lazy"
                 src="https://cdn.builder.io/api/v1/image/assets/TEMP/33249cd15af91da23f6148bb8f3775f76a32f5e469e401b8e3cb7d4815fc676f?"
