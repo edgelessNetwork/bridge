@@ -20,33 +20,23 @@ const MyAccount = ({
 
   return (
     <div className="flex">
-      <div className="bg-colorOne w-[48rem] mx-auto mt-16 shadow-xl rounded-md p-6">
-        <div className="flex">
-          <span className="p-2 text-4xl">Account</span>
-          <a
-            className="text-colorFive ml-auto my-auto rounded-md border border-colorFive p-2 text-xl hover:text-colorSeven h-11"
-            href="#"
-            onClick={() => switchToMain()}
-          >
-            Back to bridge
-          </a>
-        </div>
-        <div className="p-2">
+      <div className="text-white w-full max-w-screen-lg mx-auto mt-16 shadow-xl rounded-md p-6">
+        <div className="p-2 text-secondaryGreenText">
           <span
             className={`${
-              showDeposits && 'text-colorSeven font-semibold'
+              showDeposits && 'text-white font-semibold'
             } mr-4 cursor-pointer`}
             onClick={() => setShowDeposits(true)}
           >
-            <span className="text-xl">Deposits</span>
+            <span className=" text-[36px] sm:text-[56px]">Deposits</span>
           </span>
           <span
             className={`${
-              !showDeposits && 'text-colorSeven font-semibold'
-            } mr-4 cursor-pointer`}
+              !showDeposits && 'text-white font-semibold'
+            } mr-4 cursor-pointer `}
             onClick={() => setShowDeposits(false)}
           >
-            <span className="text-xl">Withdrawals</span>
+            <span className=" text-[36px] sm:text-[56px]">Withdrawals</span>
           </span>
         </div>
         <div className="p-2">
@@ -64,3 +54,9 @@ const MyAccount = ({
 };
 
 export default MyAccount;
+
+
+import * as React from "react";
+
+
+
