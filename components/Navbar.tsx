@@ -56,7 +56,7 @@ const Navbar = ({config, switchToAccount, switchToMain}: NavBarProps) => {
     <header className="py-4 w-full bg-primaryBg shadow text-white">
       <div className="px-4 mx-auto sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          <div className="w-fit">
+          <div className="flex gap-3">
             <span className="inline-block lg:hidden mr-4">
               <button
                 className="text-white"
@@ -113,8 +113,11 @@ const Navbar = ({config, switchToAccount, switchToMain}: NavBarProps) => {
                 loading="lazy"
                 src="https://cdn.builder.io/api/v1/image/assets/TEMP/33249cd15af91da23f6148bb8f3775f76a32f5e469e401b8e3cb7d4815fc676f?"
               />
-                <div className="text-lg font-bold">Bridge</div>
+                <div className="text-lg font-bold pt-[1px]">Bridge</div>
               </div>
+            </div>
+            <div className="flex cursor-pointer max-lg:hidden" onClick={switchToAccount}>
+              <div className="text-lg font-bold pt-[1px]">Transactions</div>
             </div>
           </div>
           <nav className="lg:flex lg:items-center lg:justify-end lg:space-x-6">
@@ -156,7 +159,7 @@ const Navbar = ({config, switchToAccount, switchToMain}: NavBarProps) => {
             <div className="grid gap-y-7">
               {LINKS.map((link: Link, i) => (
                 <a
-                  className="flex items-center p-3 -m-3 text-base font-medium text-colorFive transition-all duration-200 rounded-xl hover:bg-colorTwo focus:outline-none font-pj focus:ring-1 focus:ring-colorFive focus:ring-offset-2"
+                  className="flex items-center p-3 -m-3 text-base font-medium text-white transition-all duration-200 rounded-xl hover:bg-colorTwo focus:outline-none font-pj focus:ring-1 focus:ring-colorFive focus:ring-offset-2"
                   href={link.href}
                   key={`nav-link-expanded-${i}`}
                   rel="noopener noreferrer"

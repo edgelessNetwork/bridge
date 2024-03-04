@@ -32,7 +32,7 @@ module.exports = {
         colorSeven: 'var(--colorSeven)',
         colorEight: 'var(--colorEight)',
         primaryBg: '#030F0F',
-        secondaryGreenText: '#87A397',
+        secondaryGreenText: '#87A397', 
         primaryGreen: '#A0EB67',
       },
     },
