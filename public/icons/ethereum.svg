@@ -1,0 +1,20 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Ethereum/color" clip-path="url(#clip0_299_8636)">
+<g id="Group">
+<path id="Vector" d="M10 20C15.5228 20 20 15.5228 20 10C20 4.47715 15.5228 0 10 0C4.47715 0 0 4.47715 0 10C0 15.5228 4.47715 20 10 20Z" fill="#627EEA"/>
+<g id="Group_2">
+<path id="Vector_2" d="M10.3086 2.5V8.04375L14.9942 10.1375L10.3086 2.5Z" fill="white" fill-opacity="0.602"/>
+<path id="Vector_3" d="M10.3112 2.5L5.625 10.1375L10.3112 8.04375V2.5Z" fill="white"/>
+<path id="Vector_4" d="M10.3086 13.7295V17.4964L14.9973 11.0095L10.3086 13.7295Z" fill="white" fill-opacity="0.602"/>
+<path id="Vector_5" d="M10.3112 17.4964V13.7289L5.625 11.0095L10.3112 17.4964Z" fill="white"/>
+<path id="Vector_6" d="M10.3086 12.8576L14.9942 10.1369L10.3086 8.04443V12.8576Z" fill="white" fill-opacity="0.2"/>
+<path id="Vector_7" d="M5.625 10.1369L10.3112 12.8576V8.04443L5.625 10.1369Z" fill="white" fill-opacity="0.602"/>
+</g>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_299_8636">
+<rect width="20" height="20" fill="white"/>
+</clipPath>
+</defs>
+</svg>

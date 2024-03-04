@@ -4,6 +4,7 @@ import { InjectedConnector } from 'wagmi/connectors/injected';
 import { useModal } from 'connectkit';
 import config from 'config/config';
 import { clientConfigProps } from 'pages/_multitenant/[site]';
+import Link from 'next/link';
 
 interface Link {
   title: string;
@@ -27,7 +28,14 @@ const LINKS = [
     href: 'https://discord.gg/0xconstellation',
   },
 ];
-const Navbar = (props: clientConfigProps) => {
+
+interface NavBarProps {
+  config: clientConfigProps,
+  switchToAccount: () => void,
+  switchToMain: () => void,
+};
+
+const Navbar = ({config, switchToAccount, switchToMain}: NavBarProps) => {
   const [expanded, setExpanded] = useState(false);
   const { address, isConnected } = useAccount();
   const { connect } = useConnect({
@@ -37,21 +45,21 @@ const Navbar = (props: clientConfigProps) => {
   const { open, setOpen } = useModal();
   const { chain } = useNetwork();
 
-  const SUPPORTED_NETWORKS = props?.config
-    ? JSON.parse(props.config).tokens.flatMap((token: any) => [
+  const SUPPORTED_NETWORKS = config.config
+    ? JSON.parse(config.config).tokens.flatMap((token: any) => [
         token.l1.chainId,
         token.l2.chainId,
       ])
     : [];
 
   return (
-    <header className="py-4 bg-colorOne shadow">
-      <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+    <header className="py-4 w-full bg-primaryBg shadow text-white">
+      <div className="px-4 mx-auto sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          <div className="flex-shrink-0">
+          <div className="w-fit">
             <span className="inline-block lg:hidden mr-4">
               <button
-                className="text-colorFive"
+                className="text-white"
                 onClick={() => setExpanded(!expanded)}
                 type="button"
               >
@@ -95,36 +103,22 @@ const Navbar = (props: clientConfigProps) => {
                 </span>
               </button>
             </span>
+            <div 
+            className="max-lg:hidden"
+            onClick={switchToMain}>
+              <div className='cursor-pointer flex flex-nowrap gap-4'>
+                <img
+                alt="Edgeless Network"
+                className="max-w-full aspect-[3.57] w-[108px] "
+                loading="lazy"
+                src="https://cdn.builder.io/api/v1/image/assets/TEMP/33249cd15af91da23f6148bb8f3775f76a32f5e469e401b8e3cb7d4815fc676f?"
+              />
+                <div className="text-lg font-bold">Bridge</div>
+              </div>
+            </div>
           </div>
           <nav className="lg:flex lg:items-center lg:justify-end lg:space-x-6">
-            {chain && !SUPPORTED_NETWORKS.includes(chain.id) && (
-              <a
-                className="
-                        inline-flex
-                        items-center
-                        justify-center
-                        px-5
-                        py-2
-                        text-base
-                        leading-7
-                        text-colorFive
-                        transition-all
-                        duration-200
-                        bg-transparent
-                        border border-colorFive
-                        rounded-xl
-                        font-pj
-                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-colorFive
-                        hover:bg-colorFive hover:text-colorOne
-                        focus:bg-colorFive focus:text-colorOne
-                    "
-                href="#"
-                role="button"
-                title=""
-              >
-                Unsupported Network!
-              </a>
-            )}
+            
             <a
               className="
                         inline-flex
@@ -138,7 +132,7 @@ const Navbar = (props: clientConfigProps) => {
                         text-colorFive
                         transition-all
                         duration-200
-                        bg-transparent
+                        bg-primaryGreen
                         border border-colorFive
                         rounded-xl
                         font-pj
@@ -147,7 +141,7 @@ const Navbar = (props: clientConfigProps) => {
                         focus:bg-colorFive focus:text-colorOne
                     "
               href="#"
-              onClick={() => (isConnected ? disconnect() : connect())}
+              onClick={() => (isConnected ? switchToAccount() : connect())}
               role="button"
               title=""
             >

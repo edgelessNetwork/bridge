@@ -21,8 +21,8 @@ import { useSigner, useConnect, useSwitchNetwork, chain } from 'wagmi';
 import { InjectedConnector } from 'wagmi/connectors/injected';
 import { cleanNumString, numStringToBigNumber } from 'util/format';
 import { BridgeConfig } from 'config/config';
-import {BridgeInterface} from "../util/bridgeInterface";
-import {NitroBridgeWrapper} from "../util/nitro/nitroBridge";
+import { BridgeInterface } from '../util/bridgeInterface';
+import { NitroBridgeWrapper } from '../util/nitro/nitroBridge';
 
 interface BridgeProps {
   transferType: TransferType;
@@ -63,10 +63,10 @@ const Deposit = (props: BridgeProps) => {
   const [fromBalance, setFromBalance] = useState<string>('');
   const [toBalance, setToBalance] = useState<string>('');
 
-  const bridgeWrapper: BridgeInterface = bridgeConfig.type === 'op' ?  new OpBridgeWrapper(
-      bridgeConfig,
-      props.l1AlternativeLogsProvider
-  ) : new NitroBridgeWrapper(bridgeConfig);
+  const bridgeWrapper: BridgeInterface =
+    bridgeConfig.type === 'op'
+      ? new OpBridgeWrapper(bridgeConfig, props.l1AlternativeLogsProvider)
+      : new NitroBridgeWrapper(bridgeConfig);
 
   // Update chain Id
   useEffect(() => {
@@ -119,11 +119,19 @@ const Deposit = (props: BridgeProps) => {
 
       const [l1bal, l2bal] = await getTokenBalance(addr, selectedToken);
       if (transferType === TransferType.Deposit) {
-        setFromBalance(ethers.utils.formatUnits(l1bal, getDecimals(selectedToken, true)));
-        setToBalance(ethers.utils.formatUnits(l2bal, getDecimals(selectedToken, false)));
+        setFromBalance(
+          ethers.utils.formatUnits(l1bal, getDecimals(selectedToken, true))
+        );
+        setToBalance(
+          ethers.utils.formatUnits(l2bal, getDecimals(selectedToken, false))
+        );
       } else {
-        setFromBalance(ethers.utils.formatUnits(l2bal, getDecimals(selectedToken, false)));
-        setToBalance(ethers.utils.formatUnits(l1bal, getDecimals(selectedToken, true)));
+        setFromBalance(
+          ethers.utils.formatUnits(l2bal, getDecimals(selectedToken, false))
+        );
+        setToBalance(
+          ethers.utils.formatUnits(l1bal, getDecimals(selectedToken, true))
+        );
       }
     };
     main();
@@ -133,14 +141,20 @@ const Deposit = (props: BridgeProps) => {
   // Check if selected token is approved
   useEffect(() => {
     const main = async () => {
-      if (parseInt(selectedToken.l1.address, 16) === 0 || transferType === TransferType.Withdraw) {
+      if (
+        parseInt(selectedToken.l1.address, 16) === 0 ||
+        transferType === TransferType.Withdraw
+      ) {
         setSelectedTokenIsApproved(true);
       } else {
         setSelectedTokenIsApproved(false);
         const selectedTokenAddress = selectedToken.l1.address;
-        const l1StandardBridgeAddress = bridgeWrapper.getL1BridgeAddress(selectedToken)
+        const l1StandardBridgeAddress =
+          bridgeWrapper.getL1BridgeAddress(selectedToken);
         const userAddress = await signer?.getAddress();
-        const provider = new ethers.providers.JsonRpcProvider(selectedToken.l1.rpcURL);
+        const provider = new ethers.providers.JsonRpcProvider(
+          selectedToken.l1.rpcURL
+        );
         if (!provider || !userAddress) {
           return;
         }
@@ -152,10 +166,12 @@ const Deposit = (props: BridgeProps) => {
         );
         if (
           Number(approvalAmount) >=
-          Number(numStringToBigNumber(
-            amount,
-            ethers.BigNumber.from(getDecimals(selectedToken, true))
-          ))
+          Number(
+            numStringToBigNumber(
+              amount,
+              ethers.BigNumber.from(getDecimals(selectedToken, true))
+            )
+          )
         ) {
           setSelectedTokenIsApproved(true);
         } else {
@@ -166,6 +182,8 @@ const Deposit = (props: BridgeProps) => {
     main();
   }, [signer, selectedToken, amount, setSelectedTokenIsApproved]);
 
+  const displayAddChainButton =  walletState === WalletState.Connected && chainId !== tokens[0].l1.chainId && chainId !== tokens[0].l2.chainId;
+  
   return (
     <>
       <TokenSelectorModal
@@ -174,55 +192,75 @@ const Deposit = (props: BridgeProps) => {
         setSelectedToken={setSelectedToken}
         transferType={transferType}
       />
-      <div className="mt-6 flex flex-col justify-between">
-        <div className="flex flex-col bg-colorTwo h-36 shadow-xl rounded-lg">
-          <div className="p-4 font-colorSeven font-bridge text-colorSix">
-            From: {fromToken.name}
+      <div className="flex flex-col justify-between gap-2">
+        <div className="flex flex-col bg-colorTwo h-36 shadow-xl rounded-lg p-4">
+          <div className="flex justify-between pb-4">
+            <div className=" font-colorSeven font-bridge text-colorSix">
+              From
+            </div>
+            <div className=" font-colorSeven font-bridge text-colorSix">
+              Network: {fromToken.name}
+            </div>
           </div>
-          <div className="p-4 flex">
+          <div className="flex justify-between">
             <input
-              className="mt-auto bg-transparent text-4xl text-right"
+              className="mt-auto bg-transparent text-4xl w-full text-white focus:outline-none focus:ring-0 text-start"
               onChange={(e) => setAmount(cleanNumString(e.target.value))}
               placeholder="0.00"
               style={{ maxWidth: '70%' }}
               value={amount}
             />
+          </div>
+          <div className="flex justify-between">
+            <div className="flex items-end justify-center">
+              {/* {amount.length > 0 && (
+                <div className="text-sm text-secondaryGreenText font-bridge">
+                  ${'3,268.70'} {/* Convert balance to USD? 
+                </div>
+              )} */}
+            </div>
             <div
-              className="text-2xl ml-6 flex bg-colorThree p-2 shadow-xl rounded cursor-pointer hover:bg-colorFour"
+              className="text-2xl ml-6 flex bg-primaryBg text-white p-2 shadow-xl rounded-full cursor-pointer hover:bg-colorFour"
               onClick={() => setModalIsOpen(true)}
             >
-              <img alt="" className="h-8 w-8 my-auto" src={fromToken.logoURI} />
-              <div className="my-auto">{fromToken.symbol}</div>
               <img
                 alt=""
-                className="h-4 w-4 my-auto"
+                className="h-4 w-4 my-auto mx-2"
+                src={fromToken.logoURI}
+              />
+              <div className="my-auto px-1 text-base">{fromToken.symbol}</div>
+              <img
+                alt=""
+                className="h-4 w-4 my-auto text-white"
                 src="/icons/chevron-down.svg"
               />
             </div>
           </div>
         </div>
-        <div className="text-center text-xl py-4">▼</div>
-        <div className="bg-colorTwo shadow-xl rounded-lg">
-          <div className="p-4 font-colorSeven font-bridge text-colorSix">
-            To: {toToken.name}
+        {/* Section two */}
+        <div className="bg-colorTwo shadow-xl rounded-lg h-36 p-4">
+          <div className="pb-4 font-colorSeven font-bridge text-colorSix">
+            You recive
           </div>
-          <div className="pl-4 text-colorSix">
-            You will receive: {`${amount || 0} ${toToken.symbol}`}
-          </div>
-          <div className="pl-4 pb-4 text-colorSix">
-            {fromBalance &&
-              `Current balance on ${
-                transferType === TransferType.Deposit ? 'L1' : 'L2'
-              }: ${fromBalance} ${fromToken.symbol}`}
+          <div className="text-4xl text-colorSix">{`${amount || 0.0}`}</div>
+          <div className="flex justify-end">
+            <div className="text-2xl ml-6 flex bg-primaryBg text-white p-2 shadow-xl rounded-full cursor-pointer hover:bg-colorFour">
+              <img
+                alt=""
+                className="h-4 w-4 my-auto mx-2"
+                src={toToken.logoURI}
+              />
+              <div className="my-auto px-1 text-base">{toToken.symbol}</div>
+            </div>
           </div>
         </div>
         <button
-          className="mt-16 transition-all duration-300 font-custom text-[28px] italic font-bold inline-flex items-center justify-center px-5 py-2 bg-transparent
+          className="mt-2 transition-all duration-300 font-custom text-[28px] inline-flex items-center justify-center px-5 py-2 bg-primaryGreen
                 border border-colorFive
                 rounded-xl
                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-colorFive
-                        hover:bg-colorFive hover:text-colorOne
-                        focus:bg-colorFive focus:text-colorOne"
+                        hover:brightness-125 hover:text-colorOne
+                        "
           onClick={() =>
             transferButton(
               walletState,
@@ -234,7 +272,7 @@ const Deposit = (props: BridgeProps) => {
               signer,
               amount,
               transferType,
-              bridgeWrapper,
+              bridgeWrapper
             )
           }
         >
@@ -246,22 +284,32 @@ const Deposit = (props: BridgeProps) => {
             transferType
           )}
         </button>
-        <div className="flex justify-center">
-          <button
-          className="text-[18px] font-custom text-colorSix font-medium mt-6 hover:text-colorSeven hover:font-medium"
-          onClick={() =>
-            {if (transferType === TransferType.Deposit) {
-              addChainToMetamask(tokens[0].l1, 18, 'Ether', 'ETH');
-            } else {
-              // FIXME: we assume all chains use 18 decimals for their native token
-              addChainToMetamask(tokens[0].l2, 18, tokens[0].tokenName, tokens[0].l2.symbol);
-            }}
-          }
-        >
-            Add chain to Metamask
-          </button>
-        </div>
-        <h2 className="font-custom text-sm text-center text-colorSix mt-8">Note: You need to add the chain to Metamask before bridging from the chain.</h2>
+        {displayAddChainButton && (
+          <div className="flex justify-center">
+            <button
+              className="justify-center items-center self-stretch px-16 py-4 text-sm font-semibold tracking-tight leading-3 uppercase whitespace-nowrap bg-gray-200 rounded-xl w-full text-zinc-900 max-md:px-5"
+              onClick={() => {
+                if (transferType === TransferType.Deposit) {
+                  addChainToMetamask(tokens[0].l1, tokens[0].l1.decimals || 18, tokens[0].l1.name, tokens[0].l1.symbol);
+                } else {
+                  // FIXME: we assume all chains use tokens[0].l1.decimals || 18 decimals for their native token
+                  addChainToMetamask(
+                    tokens[0].l2,
+                    tokens[0].l1.decimals || 18,
+                    tokens[0].tokenName,
+                    tokens[0].l2.symbol
+                  );
+                }
+              }}
+            >
+              Add chain to Metamask
+            </button>
+          </div>
+        )}
+        <h2 className="font-custom text-sm text-center text-colorSix mt-8">
+          Note: You need to add the chain to Metamask before bridging from the
+          chain.
+        </h2>
         {walletState === WalletState.Connected && amount && (
           <div className="mt-6">
             <div className="flex">

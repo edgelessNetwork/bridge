@@ -9,7 +9,8 @@ import {
   clientConfigProps,
   getServerSideProps as GSSP,
 } from 'pages/_multitenant/[site]';
-import {BridgeConfig, customColorNames} from 'config/config';
+import { BridgeConfig, customColorNames } from 'config/config';
+import { BridgeFooter } from 'components/footer';
 
 enum Page {
   MAIN,
@@ -61,33 +62,36 @@ const Home: NextPage<clientConfigProps> = (props) => {
   });
 
   return (
-    <div className="min-h-screen">
-      <>
-        <Head>
-          <title>Bridge</title>
-          <meta
-            content="Enables users to transfer their
+    <div className="min-h-screen font-bridge bg-primaryBg flex flex-col justify-between">
+      <Head>
+        <title>Bridge</title>
+        <meta
+          content="Enables users to transfer their
                     tokens between the layer-1 and layer-2 chains."
-            name="description"
-          />
-          <link href="/favicon.png" rel="icon" />
-        </Head>
-        <Navbar {...props} />
-        {page === Page.MAIN ? (
-          <Main
-            bridgeConfig={bridgeConfig}
-            l1AlternativeLogsProvider={l1AlternativeLogsProvider}
-            switchToAccount={switchToAccount}
-          />
-        ) : (
-          <Account
-            bridgeConfig={bridgeConfig}
-            l1AlternativeLogsProvider={l1AlternativeLogsProvider}
-            l1ChainId={l1ChainId}
-            switchToMain={switchToMain}
-          />
-        )}
-      </>
+          name="description"
+        />
+        <link href="/favicon.png" rel="icon" />
+      </Head>
+      <Navbar
+        {...props}
+        switchToAccount={switchToAccount}
+        switchToMain={switchToMain}
+      />
+      {page === Page.MAIN ? (
+        <Main
+          bridgeConfig={bridgeConfig}
+          l1AlternativeLogsProvider={l1AlternativeLogsProvider}
+          switchToAccount={switchToAccount}
+        />
+      ) : (
+        <Account
+          bridgeConfig={bridgeConfig}
+          l1AlternativeLogsProvider={l1AlternativeLogsProvider}
+          l1ChainId={l1ChainId}
+          switchToMain={switchToMain}
+        />
+      )}
+      <BridgeFooter />
     </div>
   );
 };
