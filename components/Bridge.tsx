@@ -182,8 +182,11 @@ const Deposit = (props: BridgeProps) => {
     main();
   }, [signer, selectedToken, amount, setSelectedTokenIsApproved]);
 
-  const displayAddChainButton =  walletState === WalletState.Connected && chainId !== tokens[0].l1.chainId && chainId !== tokens[0].l2.chainId;
-  
+  const displayAddChainButton =
+    walletState === WalletState.Connected &&
+    chainId !== tokens[0].l1.chainId &&
+    chainId !== tokens[0].l2.chainId;
+
   return (
     <>
       <TokenSelectorModal
@@ -202,25 +205,16 @@ const Deposit = (props: BridgeProps) => {
               Network: {fromToken.name}
             </div>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center h-full">
             <input
-              className="mt-auto bg-transparent text-4xl w-full text-white focus:outline-none focus:ring-0 text-start"
+              className="bg-transparent text-4xl w-1/2 sm:w-full text-white focus:outline-none focus:ring-0 text-start"
               onChange={(e) => setAmount(cleanNumString(e.target.value))}
               placeholder="0.00"
               style={{ maxWidth: '70%' }}
               value={amount}
             />
-          </div>
-          <div className="flex justify-between">
-            <div className="flex items-end justify-center">
-              {/* {amount.length > 0 && (
-                <div className="text-sm text-secondaryGreenText font-bridge">
-                  ${'3,268.70'} {/* Convert balance to USD? 
-                </div>
-              )} */}
-            </div>
             <div
-              className="text-2xl ml-6 flex bg-primaryBg text-white p-2 shadow-xl rounded-full cursor-pointer hover:bg-colorFour"
+              className="text-2xl sm:ml-6 flex bg-primaryBg text-white p-2 shadow-xl rounded-full cursor-pointer hover:bg-colorFour"
               onClick={() => setModalIsOpen(true)}
             >
               <img
@@ -240,11 +234,11 @@ const Deposit = (props: BridgeProps) => {
         {/* Section two */}
         <div className="bg-colorTwo shadow-xl rounded-lg h-36 p-4">
           <div className="pb-4 font-colorSeven font-bridge text-colorSix">
-            You recive
+            You receive
           </div>
-          <div className="text-4xl text-colorSix">{`${amount || 0.0}`}</div>
-          <div className="flex justify-end">
-            <div className="text-2xl ml-6 flex bg-primaryBg text-white p-2 shadow-xl rounded-full cursor-pointer hover:bg-colorFour">
+          <div className="flex justify-between items-center h-[72px]">
+            <div className="text-4xl text-colorSix">{`${amount || 0.0}`}</div>
+            <div className="text-2xl ml-6 flex h-10 bg-primaryBg text-white p-2 shadow-xl rounded-full cursor-pointer hover:bg-colorFour">
               <img
                 alt=""
                 className="h-4 w-4 my-auto mx-2"
@@ -290,7 +284,12 @@ const Deposit = (props: BridgeProps) => {
               className="justify-center items-center self-stretch px-16 py-4 text-sm font-semibold tracking-tight leading-3 uppercase whitespace-nowrap bg-gray-200 rounded-xl w-full text-zinc-900 max-md:px-5"
               onClick={() => {
                 if (transferType === TransferType.Deposit) {
-                  addChainToMetamask(tokens[0].l1, tokens[0].l1.decimals || 18, tokens[0].l1.name, tokens[0].l1.symbol);
+                  addChainToMetamask(
+                    tokens[0].l1,
+                    tokens[0].l1.decimals || 18,
+                    tokens[0].l1.name,
+                    tokens[0].l1.symbol
+                  );
                 } else {
                   // FIXME: we assume all chains use tokens[0].l1.decimals || 18 decimals for their native token
                   addChainToMetamask(
