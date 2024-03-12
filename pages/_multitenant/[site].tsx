@@ -16,7 +16,7 @@ export interface clientConfigProps {
   colorSix: string;
   colorSeven: string;
   colorEight: string;
-  type: "op" | "nitro";
+  type: string; // 'nitro' | 'op';
 }
 
 const arbitrumNitroConfig: string = JSON.stringify({
@@ -26,37 +26,17 @@ const arbitrumNitroConfig: string = JSON.stringify({
       l1: {
         chainId: 11155111,
         address: '0x0000000000000000000000000000000000000000',
-        name: 'arbitrum-sepolia',
+        name: 'sepolia',
         symbol: 'ETH',
         decimals: 18,
         logoURI: 'https://dashboard.caldera.xyz/svgs/tokens/ETH.svg',
       },
       l2: {
-        chainId: 7557973,
+        chainId: 202,
         address: '0x0000000000000000000000000000000000000000',
-        name: 'edgeless-op',
+        name: 'edgeless-nitro',
         symbol: 'ETH',
         logoURI: 'https://dashboard.caldera.xyz/svgs/tokens/ETH.svg',
-      },
-      decimals: 18,
-      isNative: true,
-    },
-    {
-      tokenName: 'Dai',
-      l1: {
-        chainId: 11155111,
-        address: '0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6',
-        name: 'arbitrum-sepolia',
-        symbol: 'DAI',
-        decimals: 18,
-        logoURI: 'https://dashboard.caldera.xyz/svgs/tokens/DAI.svg',
-      },
-      l2: {
-        chainId: 7557973,
-        address: '0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6',
-        name: 'edgeless-op',
-        symbol: 'DAI',
-        logoURI: 'https://dashboard.caldera.xyz/svgs/tokens/DAI.svg',
       },
       decimals: 18,
       isNative: true,
@@ -83,15 +63,15 @@ const arbitrumNitroConfig: string = JSON.stringify({
     l2Weth: '0x2feaff0FC9450a04ACf745d3a76e1c3c637e8eF2',
     l2WethGateway: '0x8a6F1f69D53Bbc19148c8fBb04128c8564eE3C40',
     l1ChainId: 11155111,
-    l2ChainId: 7557973,
+    l2ChainId: 202,
     l1RPCUrl:
       'https://arb-sepolia.g.alchemy.com/v2/sWZV3jk4tyKBR2bEqmjJ0St0eFn29aQP',
-    l2RPCUrl: 'https://edgeless-op.rpc.caldera.xyz/http',
+    l2RPCUrl: 'https://edgeless-testnet.rpc.caldera.xyz/http',
   },
 });
 
 const optimismConfig: string = JSON.stringify({
-  "tokens": [
+  tokens: [
     {
       tokenName: 'Ether',
       l1: {
@@ -113,42 +93,43 @@ const optimismConfig: string = JSON.stringify({
       isNative: true,
     },
     {
-      "tokenName": "Edgeless Wrapped Eth",
-      "l1": {
-        "chainId": 11155111,
-        "address": "0x15353d8e704d218280e7a3f5563df4e4149f040b",
-        "name": "sepolia",
-        "symbol": "ewEth",
-        "decimals": 18,
-        "logoURI": "https://cryptologos.cc/logos/ethereum-eth-logo.png"
+      tokenName: 'Edgeless Wrapped Eth',
+      l1: {
+        chainId: 11155111,
+        address: '0x15353d8e704d218280e7a3f5563df4e4149f040b',
+        name: 'sepolia',
+        symbol: 'ewEth',
+        decimals: 18,
+        logoURI: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
       },
-      "l2": {
-        "chainId": 202,
-        "address": "0x0000000000000000000000000000000000000000",
-        "name": "edgeless-testnet",
-        "symbol": "ewEth",
-        "logoURI": "https://cryptologos.cc/logos/ethereum-eth-logo.png"
+      l2: {
+        chainId: 202,
+        address: '0x0000000000000000000000000000000000000000',
+        name: 'edgeless-testnet',
+        symbol: 'ewEth',
+        logoURI: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
       },
-      "decimals": 18,
-      "isNative": false
-    }
+      decimals: 18,
+      isNative: false,
+    },
   ],
-  "bridgeConfig": {
-    "addressManager": "0x2a583c340Ff65f0c7634761ea596Ec73339DFA99",
-    "l1CrossDomainMessenger": "0x6088bf5Fd588B89358CdF794c4316cBD8a6D79F7",
-    "l1StandardBridge": "0xfF591f2f96697F4D852C775B74830282d97D2c37",
-    "optimismPortal": "0x90690CDEC37DC6C3a6B54514d39122680B238dD5",
-    "l2OutputOracle": "0xE26E51C2D3a6e9a29a892E52B7694469d038bCF1",
-    "l1RPCUrl": "https://eth-sepolia.g.alchemy.com/v2/BQ43RWiHw-hqyM4NVLrzcYSm-ybT5tYN",
-    "l2RPCUrl": "https://edgeless-testnet.rpc.caldera.xyz/http"
-  }
+  bridgeConfig: {
+    addressManager: '0x2a583c340Ff65f0c7634761ea596Ec73339DFA99',
+    l1CrossDomainMessenger: '0x6088bf5Fd588B89358CdF794c4316cBD8a6D79F7',
+    l1StandardBridge: '0xfF591f2f96697F4D852C775B74830282d97D2c37',
+    optimismPortal: '0x90690CDEC37DC6C3a6B54514d39122680B238dD5',
+    l2OutputOracle: '0xE26E51C2D3a6e9a29a892E52B7694469d038bCF1',
+    l1RPCUrl:
+      'https://eth-sepolia.g.alchemy.com/v2/BQ43RWiHw-hqyM4NVLrzcYSm-ybT5tYN',
+    l2RPCUrl: 'https://edgeless-testnet.rpc.caldera.xyz/http',
+  },
 });
 
 export const getServerSideProps = async (context: {
   params: { site: string };
 }) => {
   const nitroConfig = {
-    id: 'edgeless-op',
+    id: 'edgeless-nitro',
     logo: { $binary: { base64: '', subType: '00' } },
     wordmark: { $binary: { base64: '', subType: '00' } },
     config: arbitrumNitroConfig,
@@ -180,27 +161,27 @@ export const getServerSideProps = async (context: {
   };
 
   // show 404 if the user is accessing an invalid subdomain
-  if (!opConfig) {
+  if (!nitroConfig) {
     return {
       notFound: true,
     };
   }
 
   const configProps: clientConfigProps = {
-    id: opConfig.id,
+    id: nitroConfig.id,
     faviconUrl: '',
-    logo: opConfig.logo.toString(),
-    config: opConfig.config,
-    wordmark: opConfig.wordmark.toString(),
-    colorOne: opConfig.colorOne,
-    colorTwo: opConfig.colorTwo,
-    colorThree: opConfig.colorThree,
-    colorFour: opConfig.colorFour,
-    colorFive: opConfig.colorFive,
-    colorSix: opConfig.colorSix,
-    colorSeven: opConfig.colorSeven,
-    colorEight: opConfig.colorEight,
-    type: 'op',
+    logo: nitroConfig.logo.toString(),
+    config: nitroConfig.config,
+    wordmark: nitroConfig.wordmark.toString(),
+    colorOne: nitroConfig.colorOne,
+    colorTwo: nitroConfig.colorTwo,
+    colorThree: nitroConfig.colorThree,
+    colorFour: nitroConfig.colorFour,
+    colorFive: nitroConfig.colorFive,
+    colorSix: nitroConfig.colorSix,
+    colorSeven: nitroConfig.colorSeven,
+    colorEight: nitroConfig.colorEight,
+    type: nitroConfig.type,
   };
 
   return {

@@ -13,7 +13,6 @@ import { Paginator } from './Paginator';
 
 const DEFAULT_NUM_MESSAGES = 5;
 
-
 // Table of user's past transactions
 // Lists deposits if isDepositMode === true, else lists withdrawals
 const TransactionList = ({
@@ -92,6 +91,7 @@ const TransactionList = ({
             numMessages + 1,
             messageOffset
           );
+          console.log(deposits);
           setDeposits(deposits);
         } catch {
           setDeposits([]);
@@ -147,7 +147,7 @@ const TransactionList = ({
     <>
       <table className="table-auto min-w-full font-bridge">
         <thead>
-          <tr className='text-[var(--grey,#D0DAD8)] leading-[132%] font-[600] text-[12px] uppercase tracking-[-0.288px]'>
+          <tr className="text-[var(--grey,#D0DAD8)] leading-[132%] font-[600] text-[12px] uppercase tracking-[-0.288px]">
             <th className="text-left font-[Neue Regrade]">Time</th>
             <th className="font-[Neue Regrade]">Transaction</th>
             <th className="font-[Neue Regrade]">Amount</th>

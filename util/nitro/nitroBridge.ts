@@ -1,10 +1,10 @@
-import {BigNumber, ethers, Signer, utils} from 'ethers';
-import {NitroBridgeConfig, Token} from 'config/config';
-import {getBalance} from 'util/erc20';
+import { BigNumber, ethers, Signer, utils } from 'ethers';
+import { NitroBridgeConfig, Token } from 'config/config';
+import { getBalance } from 'util/erc20';
 import * as notifStyles from 'misc/notifStyles';
-import {toast} from 'react-toastify';
-import {FetchSignerResult} from '@wagmi/core';
-import {TransferType} from 'util/transferUtils';
+import { toast } from 'react-toastify';
+import { FetchSignerResult } from '@wagmi/core';
+import { TransferType } from 'util/transferUtils';
 import {
   addCustomNetwork,
   Erc20Bridger,
@@ -16,110 +16,125 @@ import {
   L2Network,
   L2ToL1MessageReader,
   L2ToL1MessageStatus,
-  L2TransactionReceipt
+  L2TransactionReceipt,
 } from '@constellation-labs/arbitrum-sdk';
-import {Bridge, MessageDeliveredEvent} from '@constellation-labs/arbitrum-sdk/dist/lib/abi/Bridge'
-import {L1ERC20Gateway__factory} from '@constellation-labs/arbitrum-sdk/dist/lib/abi/factories/L1ERC20Gateway__factory'
-import {L1ERC20Gateway} from '@constellation-labs/arbitrum-sdk/dist/lib/abi/L1ERC20Gateway'
-import {Bridge__factory} from '@constellation-labs/arbitrum-sdk/dist/lib/abi/factories/Bridge__factory'
-import {getTestNetwork} from '../generateNetworkConfig';
-import {l1Networks, l2Networks} from '@constellation-labs/arbitrum-sdk/dist/lib/dataEntities/networks';
-import {BridgeInterface, MessageInterface} from "../bridgeInterface";
-import {Block} from "@ethersproject/abstract-provider";
+import {
+  Bridge,
+  MessageDeliveredEvent,
+} from '@constellation-labs/arbitrum-sdk/dist/lib/abi/Bridge';
+import { L1ERC20Gateway__factory } from '@constellation-labs/arbitrum-sdk/dist/lib/abi/factories/L1ERC20Gateway__factory';
+import { L1ERC20Gateway } from '@constellation-labs/arbitrum-sdk/dist/lib/abi/L1ERC20Gateway';
+import { Bridge__factory } from '@constellation-labs/arbitrum-sdk/dist/lib/abi/factories/Bridge__factory';
+import { getTestNetwork } from '../generateNetworkConfig';
+import {
+  l1Networks,
+  l2Networks,
+} from '@constellation-labs/arbitrum-sdk/dist/lib/dataEntities/networks';
+import { BridgeInterface, MessageInterface } from '../bridgeInterface';
+import { Block } from '@ethersproject/abstract-provider';
 import { L2ToL1TransactionEvent } from '@constellation-labs/arbitrum-sdk/dist/lib/message/L2ToL1Message';
 
-
 type Message = {
-    transactionHash: string;
-    amount: ethers.BigNumber;
-    l1Token: string;
+  transactionHash: string;
+  amount: ethers.BigNumber;
+  l1Token: string;
 };
 
 type RichBridgeMessage = {
-    message: Message;
-    status: string;
-    block: ethers.providers.Block;
+  message: Message;
+  status: string;
+  block: ethers.providers.Block;
 };
 
 class NitroMessage implements MessageInterface {
-
   data: RichBridgeMessage;
-  bridge: NitroBridgeWrapper
-
+  bridge: NitroBridgeWrapper;
 
   constructor(data: RichBridgeMessage, bridge: NitroBridgeWrapper) {
-      this.data = data;
-      this.bridge = bridge;
+    this.data = data;
+    this.bridge = bridge;
   }
 
-    getAmount(): BigNumber {
-      return this.data.message.amount;
+  getAmount(): BigNumber {
+    return this.data.message.amount;
   }
 
   getBlock(): Block {
-      return this.data.block;
+    return this.data.block;
   }
 
   getHash(): string {
-      return this.data.block.hash;
+    return this.data.block.hash;
   }
 
   getL1Token(): string {
-      return this.data.message.l1Token;
+    return this.data.message.l1Token;
   }
 
   getStatus(): string {
-      return this.data.status;
+    return this.data.status;
   }
 
   nextStepName(isDepositMode: boolean): 'finalize' | undefined {
-      if (this.data.status === withdrawalStatusToString(L2ToL1MessageStatus.CONFIRMED) && !isDepositMode) {
-          return 'finalize';
-      }
+    if (
+      this.data.status ===
+        withdrawalStatusToString(L2ToL1MessageStatus.CONFIRMED) &&
+      !isDepositMode
+    ) {
+      return 'finalize';
+    }
   }
 
-  async takeNextStep(signer: Signer, token: Token, isDepositMode: boolean): Promise<void> {
-      if (!this.nextStepName(isDepositMode)) throw new Error(`invalid conditions for takeNextStep, status: ${this.getStatus()}, deposit: ${isDepositMode}`)
-      await this.bridge.finalizeWithdrawalMessage(signer, this.data, token)
+  async takeNextStep(
+    signer: Signer,
+    token: Token,
+    isDepositMode: boolean
+  ): Promise<void> {
+    if (!this.nextStepName(isDepositMode))
+      throw new Error(
+        `invalid conditions for takeNextStep, status: ${this.getStatus()}, deposit: ${isDepositMode}`
+      );
+    await this.bridge.finalizeWithdrawalMessage(signer, this.data, token);
   }
-
 }
 
 export class NitroBridgeWrapper implements BridgeInterface {
   ethBridger: EthBridger;
-  erc20Bridger: Erc20Bridger
-  l2Network: L2Network
-  bridgeConfig: NitroBridgeConfig
+  erc20Bridger: Erc20Bridger;
+  l2Network: L2Network;
+  bridgeConfig: NitroBridgeConfig;
 
-    depositCreationFailedStatus(): string {
-        return depositStatusToString(L1ToL2MessageStatus.CREATION_FAILED);
-    }
+  depositCreationFailedStatus(): string {
+    return depositStatusToString(L1ToL2MessageStatus.CREATION_FAILED);
+  }
 
-    depositDepositedStatus(): string {
-        return ethDepositStatusToString(EthDepositStatus.DEPOSITED);
-    }
+  depositDepositedStatus(): string {
+    return ethDepositStatusToString(EthDepositStatus.DEPOSITED);
+  }
 
-    depositRedeemedStatus(): string {
-        return depositStatusToString(L1ToL2MessageStatus.REDEEMED);
-    }
+  depositRedeemedStatus(): string {
+    return depositStatusToString(L1ToL2MessageStatus.REDEEMED);
+  }
 
-    getL1BridgeAddress(token: Token): string {
-        return token?.isNative ? this.bridgeConfig.inbox : this.bridgeConfig.l1ERC20Gateway;
-    }
+  getL1BridgeAddress(token: Token): string {
+    return token?.isNative
+      ? this.bridgeConfig.inbox
+      : this.bridgeConfig.l1ERC20Gateway;
+  }
 
-    withdrawConfirmedStatus(): string {
-        return "";
-    }
+  withdrawConfirmedStatus(): string {
+    return '';
+  }
 
   constructor(bridgeConfig: NitroBridgeConfig) {
     const networkConfig = getTestNetwork(bridgeConfig);
-    const customL1Network: L1Network = networkConfig.l1Network as L1Network
-    const customL2Network: L2Network = networkConfig.l2Network as L2Network
-    if (!l1Networks[bridgeConfig.l1ChainId]){
-      addCustomNetwork({customL1Network, customL2Network})
+    const customL1Network: L1Network = networkConfig.l1Network as L1Network;
+    const customL2Network: L2Network = networkConfig.l2Network as L2Network;
+    if (!l1Networks[bridgeConfig.l1ChainId]) {
+      addCustomNetwork({ customL1Network, customL2Network });
     }
-    if (!l2Networks[bridgeConfig.l2ChainId]){
-      addCustomNetwork({customL2Network})
+    if (!l2Networks[bridgeConfig.l2ChainId]) {
+      addCustomNetwork({ customL2Network });
     }
     this.ethBridger = new EthBridger(customL2Network);
     this.erc20Bridger = new Erc20Bridger(customL2Network);
@@ -127,16 +142,14 @@ export class NitroBridgeWrapper implements BridgeInterface {
     this.bridgeConfig = bridgeConfig;
   }
 
-    transferToken = async (
+  transferToken = async (
     amount: ethers.BigNumber, // This should be parsed and formatted before using it as an argument
     signer: ethers.Signer, // l1 signer for deposit, l2 signer for withdrawal
     token: Token,
     transferType: TransferType
   ) => {
     const isDeposit = transferType === TransferType.Deposit;
-    const l1Provider = new ethers.providers.JsonRpcProvider(
-      token.l1.rpcURL
-    );
+    const l1Provider = new ethers.providers.JsonRpcProvider(token.l1.rpcURL);
     const l2Provider = new ethers.providers.JsonRpcProvider(
       getReplicaUrl(token.l2.rpcURL)
     );
@@ -145,18 +158,21 @@ export class NitroBridgeWrapper implements BridgeInterface {
     try {
       let response;
       if (isDeposit) {
-        if (token.isNative){
+        if (token.isNative) {
           response = await this.ethBridger.deposit({
-            amount, l1Signer: signer
-          })
-        } else {
-          const estimatedGas = (await this.erc20Bridger.getDepositRequest({
             amount,
-            erc20L1Address: token.l1.address,
-            l1Provider: signer.provider as ethers.providers.JsonRpcProvider,
-            l2Provider,
-            from: signerAddress
-          })).retryableData.gasLimit
+            l1Signer: signer,
+          });
+        } else {
+          const estimatedGas = (
+            await this.erc20Bridger.getDepositRequest({
+              amount,
+              erc20L1Address: token.l1.address,
+              l1Provider: signer.provider as ethers.providers.JsonRpcProvider,
+              l2Provider,
+              from: signerAddress,
+            })
+          ).retryableData.gasLimit;
 
           response = await this.erc20Bridger.deposit({
             amount,
@@ -165,26 +181,24 @@ export class NitroBridgeWrapper implements BridgeInterface {
             l2Provider,
             // The sdk gas estimation is wildly off for bridging ERC20s; this is a hack to allow deposits to go through
             overrides: {
-              gasLimit: estimatedGas.add(200000)
-
-            }
-
-          })
+              gasLimit: estimatedGas.add(200000),
+            },
+          });
         }
       } else {
         response = token.isNative
           ? await this.ethBridger.withdraw({
-            amount,
-            l2Signer: signer,
-            from: signerAddress,
-            destinationAddress: signerAddress,
-          })
+              amount,
+              l2Signer: signer,
+              from: signerAddress,
+              destinationAddress: signerAddress,
+            })
           : await this.erc20Bridger.withdraw({
-            amount,
-            erc20l1Address: token.l1.address,
-            l2Signer: signer,
-            destinationAddress: signerAddress,
-          });
+              amount,
+              erc20l1Address: token.l1.address,
+              l2Signer: signer,
+              destinationAddress: signerAddress,
+            });
       }
 
       toast.info(
@@ -207,7 +221,9 @@ export class NitroBridgeWrapper implements BridgeInterface {
   };
 
   isReadyForFinalization = (message: RichBridgeMessage) => {
-    return message.status === withdrawalStatusToString(L2ToL1MessageStatus.CONFIRMED)
+    return (
+      message.status === withdrawalStatusToString(L2ToL1MessageStatus.CONFIRMED)
+    );
   };
 
   finalizeWithdrawalMessage = async (
@@ -220,198 +236,313 @@ export class NitroBridgeWrapper implements BridgeInterface {
     if (!this.isReadyForFinalization(message)) {
       throw 'Message not ready for relay';
     }
-    const receipt = await l2Provider.getTransactionReceipt(message.message.transactionHash)
-    const l2Receipt = new L2TransactionReceipt(receipt)
-    const messages = await l2Receipt.getL2ToL1Messages(l1Signer)
-    const l2ToL1Msg = messages[0]
-    const res = await l2ToL1Msg.execute(l2Provider)
-    await res.wait()
+    const receipt = await l2Provider.getTransactionReceipt(
+      message.message.transactionHash
+    );
+    const l2Receipt = new L2TransactionReceipt(receipt);
+    const messages = await l2Receipt.getL2ToL1Messages(l1Signer);
+    const l2ToL1Msg = messages[0];
+    const res = await l2ToL1Msg.execute(l2Provider);
+    await res.wait();
   };
 
-  getHackyWithdrawalStatus = async (message: any, timestamp: number, l2Provider: ethers.providers.Provider) => {
+  getHackyWithdrawalStatus = async (
+    message: any,
+    timestamp: number,
+    l2Provider: ethers.providers.Provider
+  ) => {
     let status = 0;
     // Hack. If a batch has not been submitted for a tx and an assertion has not yet completed the challenge
     // period then the message will not have a status yet. We use 1 hour to approximate how long
     // it will take for the batch for a given withdrawal to be submitted
-    if (timestamp && timestamp > parseInt((Date.now() / 1000 - 3600).toFixed(0))) {
+    if (
+      timestamp &&
+      timestamp > parseInt((Date.now() / 1000 - 3600).toFixed(0))
+    ) {
       return status;
     }
     try {
-      status = await message.status(l2Provider)
+      status = await message.status(l2Provider);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
     return status;
-  }
+  };
 
-  getEthWithdrawalsForAddress = async (address: string, token: Token, amount: number, offset: number): Promise<NitroMessage[]> => {
+  getEthWithdrawalsForAddress = async (
+    address: string,
+    token: Token,
+    amount: number,
+    offset: number
+  ): Promise<NitroMessage[]> => {
     const l1Provider = new ethers.providers.JsonRpcProvider(token.l1.rpcURL);
     const l2Provider = new ethers.providers.JsonRpcProvider(
       getReplicaUrl(token.l2.rpcURL)
     );
-    const withdrawalEvents = (await L2ToL1MessageReader.getL2ToL1Events(
-      l2Provider,
-      {fromBlock: 0, toBlock: 'latest'},
-      undefined,
-      address
-    ))
-        .sort((a, b) => b.arbBlockNum.sub(a.arbBlockNum).toNumber())
-        .slice(offset, offset + amount)
-    const richEthWithdrawalMessages = await Promise.all(withdrawalEvents.map(async (event)=> {
-      const receipt = await l2Provider.getTransactionReceipt(event.transactionHash)
-      const block = await l2Provider.getBlock(receipt.blockNumber)
-      const message = L2ToL1MessageReader.fromEvent(l1Provider, event)
-      const status = withdrawalStatusToString(await this.getHackyWithdrawalStatus(message, block.timestamp, l2Provider))
-      const amount = event.callvalue || ethers.BigNumber.from(0)
-      const richMessage: Message = {
-        transactionHash: receipt.transactionHash,
-        amount,
-        l1Token: token.l1.address,
-      }
-      return {
-        message: richMessage,
-        status,
-        block,
-      };
-    }))
-    return richEthWithdrawalMessages.map((msg) => new NitroMessage(msg, this));
-  }
-
-  getERC20WithdrawalsForAddress = async (address: string, token: Token, amount: number, offset: number): Promise<NitroMessage[]> => {
-    const l1Provider = new ethers.providers.JsonRpcProvider(token.l1.rpcURL);
-    const l2Provider = new ethers.providers.JsonRpcProvider(
-      getReplicaUrl(token.l2.rpcURL)
-    );
-    const withdrawalEvents = (await this.erc20Bridger.getL2WithdrawalEvents(
-      l2Provider,
-      this.l2Network.tokenBridge.l2ERC20Gateway,
-      { fromBlock: 0, toBlock: 'latest'},
-      undefined,
-      address
-    ))
-        .reverse()
-        .slice(offset, offset + amount)
-    const richERC20WithdrawalMessages = await Promise.all(withdrawalEvents.map(async (event)=> {
-        const receipt = await l2Provider.getTransactionReceipt(event.txHash)
-        const block = await l2Provider.getBlock(receipt.blockNumber)
-        const l2Receipt = new L2TransactionReceipt(receipt)
-        const message = (await l2Receipt.getL2ToL1Messages(l1Provider))[0]
-        const status = withdrawalStatusToString(await this.getHackyWithdrawalStatus(message, block.timestamp, l2Provider))
-        const amount = event._amount || ethers.BigNumber.from(0)
+    const withdrawalEvents = (
+      await L2ToL1MessageReader.getL2ToL1Events(
+        l2Provider,
+        { fromBlock: 0, toBlock: 'latest' },
+        undefined,
+        address
+      )
+    )
+      .sort((a, b) => b.arbBlockNum.sub(a.arbBlockNum).toNumber())
+      .slice(offset, offset + amount);
+    const richEthWithdrawalMessages = await Promise.all(
+      withdrawalEvents.map(async (event) => {
+        const receipt = await l2Provider.getTransactionReceipt(
+          event.transactionHash
+        );
+        const block = await l2Provider.getBlock(receipt.blockNumber);
+        const message = L2ToL1MessageReader.fromEvent(l1Provider, event);
+        const status = withdrawalStatusToString(
+          await this.getHackyWithdrawalStatus(
+            message,
+            block.timestamp,
+            l2Provider
+          )
+        );
+        const amount = event.callvalue || ethers.BigNumber.from(0);
         const richMessage: Message = {
           transactionHash: receipt.transactionHash,
           amount,
-          l1Token: event.l1Token,
-        }
+          l1Token: token.l1.address,
+        };
         return {
           message: richMessage,
           status,
           block,
         };
-      }
-    ))
-    return richERC20WithdrawalMessages.map((msg) => new NitroMessage(msg, this));
-  }
-
-
-  getWithdrawalsForAddress = async (address: string, token: Token, amount: number, offset: number): Promise<NitroMessage[]> => {
-    // Displays all ETH messages first. A little hacky but there's not an efficient way to query for both eth and
-    // erc20 deposits at the same time (and to sort the combined list)
-    const ethWithdrawals = await this.getEthWithdrawalsForAddress(address, token, amount, offset)
-    let erc20Withdrawals: NitroMessage[] = [];
-    if (ethWithdrawals.length < amount) {
-      erc20Withdrawals = await this.getERC20WithdrawalsForAddress(address, token, amount - ethWithdrawals.length, offset)
-    }
-    const allWithdrawals = ethWithdrawals.concat(erc20Withdrawals)
-    return allWithdrawals
+      })
+    );
+    return richEthWithdrawalMessages.map((msg) => new NitroMessage(msg, this));
   };
 
-  getEthDepositsForAddress = async (address: string, token: Token, amount: number, offset: number): Promise<NitroMessage[]> => {
+  getERC20WithdrawalsForAddress = async (
+    address: string,
+    token: Token,
+    amount: number,
+    offset: number
+  ): Promise<NitroMessage[]> => {
     const l1Provider = new ethers.providers.JsonRpcProvider(token.l1.rpcURL);
     const l2Provider = new ethers.providers.JsonRpcProvider(
       getReplicaUrl(token.l2.rpcURL)
     );
-    const bridge: Bridge = Bridge__factory.connect(this.ethBridger.l2Network.ethBridge.bridge, l1Provider)
-    // Note: will only return up to 10k events. Make a plan on how to deal with this.
-    const allDepositEvents = await bridge.queryFilter(bridge.filters.MessageDelivered(null, null, null, null, null, null, null, null), 0, 'latest')
-    // The mapping should preserve the original order
-    const fromAddresses = await Promise.all(allDepositEvents.map(async (event) => {
-      const tx = await l1Provider.getTransaction(event.transactionHash)
-      return tx.from
-    }))
-    const depositEvents = allDepositEvents.filter((_, index) => {
-      return fromAddresses[index] === address
-    })
-    const ethDeposits = depositEvents.filter((event: MessageDeliveredEvent) => {
-      // See for the type number for eth deposits: https://github.com/OffchainLabs/nitro-contracts/blob/main/src/libraries/MessageTypes.sol
-      return event.args.kind === 12
-    })
-        .sort((a, b) => b.blockNumber - a.blockNumber)
-        .slice(offset, offset + amount)
-    const richEthDepositMessages = await Promise.all(ethDeposits.map(async (event)=> {
-      const receipt = await l1Provider.getTransactionReceipt(event.transactionHash)
-      const l1Receipt = new L1TransactionReceipt(receipt)
-      const message = (await l1Receipt.getEthDeposits(l2Provider))[0]
-      const status = ethDepositStatusToString(await message.status())
-      const block = await l1Provider.getBlock(receipt.blockNumber)
-      const amount = message.value
-      const richMessage: Message = {
-        transactionHash: receipt.transactionHash,
-        amount,
-        l1Token: token.l1.address,
-      }
-      return {
-        message: richMessage,
-        status,
-        block,
-      };
-    }))
-    return richEthDepositMessages.map((msg) => new NitroMessage(msg, this));
-  }
-
-  getERC20DepositsForAddress = async (address: string, token: Token, amount: number, offset: number): Promise<NitroMessage[]> => {
-    const l1Provider = new ethers.providers.JsonRpcProvider(token.l1.rpcURL);
-    const l2Provider = new ethers.providers.JsonRpcProvider(
-      getReplicaUrl(token.l2.rpcURL)
+    const withdrawalEvents = (
+      await this.erc20Bridger.getL2WithdrawalEvents(
+        l2Provider,
+        this.l2Network.tokenBridge.l2ERC20Gateway,
+        { fromBlock: 0, toBlock: 'latest' },
+        undefined,
+        address
+      )
+    )
+      .reverse()
+      .slice(offset, offset + amount);
+    const richERC20WithdrawalMessages = await Promise.all(
+      withdrawalEvents.map(async (event) => {
+        const receipt = await l2Provider.getTransactionReceipt(event.txHash);
+        const block = await l2Provider.getBlock(receipt.blockNumber);
+        const l2Receipt = new L2TransactionReceipt(receipt);
+        const message = (await l2Receipt.getL2ToL1Messages(l1Provider))[0];
+        const status = withdrawalStatusToString(
+          await this.getHackyWithdrawalStatus(
+            message,
+            block.timestamp,
+            l2Provider
+          )
+        );
+        const amount = event._amount || ethers.BigNumber.from(0);
+        const richMessage: Message = {
+          transactionHash: receipt.transactionHash,
+          amount,
+          l1Token: event.l1Token,
+        };
+        return {
+          message: richMessage,
+          status,
+          block,
+        };
+      })
     );
-    const l1ERC20Gateway: L1ERC20Gateway = L1ERC20Gateway__factory.connect(this.erc20Bridger.l2Network.tokenBridge.l1ERC20Gateway, l1Provider)
-    const userERC20Deposits = await l1ERC20Gateway.queryFilter(l1ERC20Gateway.filters.DepositInitiated(null, address, null, null, null), 0, 'latest')
-    const erc20Deposits = userERC20Deposits.sort((a, b) => b.blockNumber - a.blockNumber)
-        .slice(offset, offset + amount)
-    const richERC20DepositMessages = await Promise.all(erc20Deposits.map(async (event)=> {
-      const receipt = await l1Provider.getTransactionReceipt(event.transactionHash)
-      const l1Receipt = new L1TransactionReceipt(receipt)
-      const message = (await l1Receipt.getL1ToL2Messages(l2Provider))[0]
-      const status = depositStatusToString(await message.status())
-      const block = await l1Provider.getBlock(receipt.blockNumber)
-      const amount = event.args._amount
-      const richMessage: Message = {
-        transactionHash: receipt.transactionHash,
-        amount,
-        l1Token: event.args.l1Token,
-      }
-      return {
-        message: richMessage,
-        status,
-        block,
-      };
-    }))
-    return richERC20DepositMessages.map((msg) => new NitroMessage(msg, this));
-  }
+    return richERC20WithdrawalMessages.map(
+      (msg) => new NitroMessage(msg, this)
+    );
+  };
 
-    
-
-  getDepositsForAddress = async (address: string, token: Token, amount: number, offset: number): Promise<NitroMessage[]> => {
+  getWithdrawalsForAddress = async (
+    address: string,
+    token: Token,
+    amount: number,
+    offset: number
+  ): Promise<NitroMessage[]> => {
     // Displays all ETH messages first. A little hacky but there's not an efficient way to query for both eth and
     // erc20 deposits at the same time (and to sort the combined list)
-    const ethDeposits = await this.getEthDepositsForAddress(address, token, amount, offset)
+    const ethWithdrawals = await this.getEthWithdrawalsForAddress(
+      address,
+      token,
+      amount,
+      offset
+    );
+    let erc20Withdrawals: NitroMessage[] = [];
+    if (ethWithdrawals.length < amount) {
+      erc20Withdrawals = await this.getERC20WithdrawalsForAddress(
+        address,
+        token,
+        amount - ethWithdrawals.length,
+        offset
+      );
+    }
+    const allWithdrawals = ethWithdrawals.concat(erc20Withdrawals);
+    return allWithdrawals;
+  };
+
+  getEthDepositsForAddress = async (
+    address: string,
+    token: Token,
+    amount: number,
+    offset: number
+  ): Promise<NitroMessage[]> => {
+    const l1Provider = new ethers.providers.JsonRpcProvider(token.l1.rpcURL);
+    const l2Provider = new ethers.providers.JsonRpcProvider(
+      getReplicaUrl(token.l2.rpcURL)
+    );
+    const bridge: Bridge = Bridge__factory.connect(
+      this.ethBridger.l2Network.ethBridge.bridge,
+      l1Provider
+    );
+    // Note: will only return up to 10k events. Make a plan on how to deal with this.
+    const allDepositEvents = await bridge.queryFilter(
+      bridge.filters.MessageDelivered(
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ),
+      0,
+      'latest'
+    );
+    // The mapping should preserve the original order
+    const fromAddresses = await Promise.all(
+      allDepositEvents.map(async (event) => {
+        const tx = await l1Provider.getTransaction(event.transactionHash);
+        return tx.from;
+      })
+    );
+    const depositEvents = allDepositEvents.filter((_, index) => {
+      return fromAddresses[index] === address;
+    });
+    const ethDeposits = depositEvents
+      .filter((event: MessageDeliveredEvent) => {
+        // See for the type number for eth deposits: https://github.com/OffchainLabs/nitro-contracts/blob/main/src/libraries/MessageTypes.sol
+        return event.args.kind === 12;
+      })
+      .sort((a, b) => b.blockNumber - a.blockNumber)
+      .slice(offset, offset + amount);
+    console.log(ethDeposits);
+    const richEthDepositMessages = await Promise.all(
+      ethDeposits.map(async (event) => {
+        const receipt = await l1Provider.getTransactionReceipt(
+          event.transactionHash
+        );
+        const l1Receipt = new L1TransactionReceipt(receipt);
+        const message = (await l1Receipt.getEthDeposits(l2Provider))[0];
+        const status = ethDepositStatusToString(await message.status());
+        const block = await l1Provider.getBlock(receipt.blockNumber);
+        const amount = message.value;
+        const richMessage: Message = {
+          transactionHash: receipt.transactionHash,
+          amount,
+          l1Token: token.l1.address,
+        };
+        return {
+          message: richMessage,
+          status,
+          block,
+        };
+      })
+    );
+    return richEthDepositMessages.map((msg) => new NitroMessage(msg, this));
+  };
+
+  getERC20DepositsForAddress = async (
+    address: string,
+    token: Token,
+    amount: number,
+    offset: number
+  ): Promise<NitroMessage[]> => {
+    const l1Provider = new ethers.providers.JsonRpcProvider(token.l1.rpcURL);
+    const l2Provider = new ethers.providers.JsonRpcProvider(
+      getReplicaUrl(token.l2.rpcURL)
+    );
+    const l1ERC20Gateway: L1ERC20Gateway = L1ERC20Gateway__factory.connect(
+      this.erc20Bridger.l2Network.tokenBridge.l1ERC20Gateway,
+      l1Provider
+    );
+    const userERC20Deposits = await l1ERC20Gateway.queryFilter(
+      l1ERC20Gateway.filters.DepositInitiated(null, address, null, null, null),
+      0,
+      'latest'
+    );
+    const erc20Deposits = userERC20Deposits
+      .sort((a, b) => b.blockNumber - a.blockNumber)
+      .slice(offset, offset + amount);
+    const richERC20DepositMessages = await Promise.all(
+      erc20Deposits.map(async (event) => {
+        const receipt = await l1Provider.getTransactionReceipt(
+          event.transactionHash
+        );
+        const l1Receipt = new L1TransactionReceipt(receipt);
+        const message = (await l1Receipt.getL1ToL2Messages(l2Provider))[0];
+        const status = depositStatusToString(await message.status());
+        const block = await l1Provider.getBlock(receipt.blockNumber);
+        const amount = event.args._amount;
+        const richMessage: Message = {
+          transactionHash: receipt.transactionHash,
+          amount,
+          l1Token: event.args.l1Token,
+        };
+        return {
+          message: richMessage,
+          status,
+          block,
+        };
+      })
+    );
+    return richERC20DepositMessages.map((msg) => new NitroMessage(msg, this));
+  };
+
+  getDepositsForAddress = async (
+    address: string,
+    token: Token,
+    amount: number,
+    offset: number
+  ): Promise<NitroMessage[]> => {
+    // Displays all ETH messages first. A little hacky but there's not an efficient way to query for both eth and
+    // erc20 deposits at the same time (and to sort the combined list)
+    const ethDeposits = await this.getEthDepositsForAddress(
+      address,
+      token,
+      amount,
+      offset
+    );
     let erc20Deposits: NitroMessage[] = [];
     if (ethDeposits.length < amount) {
-      erc20Deposits = await this.getERC20DepositsForAddress(address, token, amount - ethDeposits.length, offset)
+      erc20Deposits = await this.getERC20DepositsForAddress(
+        address,
+        token,
+        amount - ethDeposits.length,
+        offset
+      );
     }
-    const allDeposits = ethDeposits.concat(erc20Deposits)
-    return allDeposits
-  }
+    const allDeposits = ethDeposits.concat(erc20Deposits);
+    return allDeposits;
+  };
 }
 
 export const getTxUrl = (txHash: string, rpcURL: string) => {
@@ -420,8 +551,8 @@ export const getTxUrl = (txHash: string, rpcURL: string) => {
 
 // TODO: Do this in a more stable way, without depending on URL structure
 export const getReplicaUrl = (rpcUrl: string) => {
-//  if (rpcUrl.substr(-4) == "http")
-//    return rpcUrl.slice(0, rpcUrl.length - 4) + 'replica-http';
+  //  if (rpcUrl.substr(-4) == "http")
+  //    return rpcUrl.slice(0, rpcUrl.length - 4) + 'replica-http';
   return rpcUrl;
 };
 
@@ -473,12 +604,15 @@ export const getTokenBalance = async (
   );
 
   let l1bal: ethers.BigNumberish, l2bal: ethers.BigNumberish;
-  l1bal = parseInt(token.l1.address, 16) ? await getBalance(l1Provider, token.l1.address, address) : await l1Provider.getBalance(address);
-  l2bal = parseInt(token.l2.address, 16) ? await getBalance(l2Provider, token.l2.address, address) : await l2Provider.getBalance(address);
+  l1bal = parseInt(token.l1.address, 16)
+    ? await getBalance(l1Provider, token.l1.address, address)
+    : await l1Provider.getBalance(address);
+  l2bal = parseInt(token.l2.address, 16)
+    ? await getBalance(l2Provider, token.l2.address, address)
+    : await l2Provider.getBalance(address);
 
   return [l1bal, l2bal];
 };
-
 
 export const ethDepositStatusToString = (status: number) => {
   /*
@@ -491,11 +625,10 @@ export const ethDepositStatusToString = (status: number) => {
   };
   if (status in statuses) {
     return statuses[status]!;
-  }
-  else {
+  } else {
     return 'Unknown';
   }
-}
+};
 
 export const depositStatusToString = (status: number) => {
   /*
@@ -535,4 +668,4 @@ export const withdrawalStatusToString = (status: number) => {
   } else {
     return 'Unknown';
   }
-}
+};
