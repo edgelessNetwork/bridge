@@ -35,7 +35,7 @@ const Home: NextPage<clientConfigProps> = (props) => {
   const config = JSON.parse(props.config);
 
   const bridgeConfig: BridgeConfig = config.bridgeConfig;
-  bridgeConfig.type = props.type;
+  bridgeConfig.type = props.type as 'nitro' | 'op';
   const l1ChainId = config.tokens[0]?.l1?.chainId!;
   const l1AlternativeLogsProvider: string | undefined =
     config.tokens[0]?.l1?.getLogsProvider;
