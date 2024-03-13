@@ -10,6 +10,7 @@ import { ethers } from 'ethers';
 import { BridgeInterface } from './bridgeInterface';
 import { TransferType } from './types';
 import { depositEth } from './edgeless/deposit';
+import { depositErc20 } from './edgeless/depositERC20';
 
 enum WalletState {
   Disonnected,
@@ -114,10 +115,10 @@ const transferERC = async (
     amount,
     getDecimals(selectedToken, transferType === TransferType.Deposit)
   );
+  console.log(transferAmount);
   if (!transferAmount) {
     return;
   }
-
   if (!fromToken.address) {
     toast.error(notifStyles.msg.no_l1_addr, notifStyles.standard);
     return;
@@ -126,13 +127,7 @@ const transferERC = async (
     toast.error(notifStyles.msg.no_l2_addr, notifStyles.standard);
     return;
   }
-
-  bridgeWrapper.transferToken(
-    transferAmount,
-    signer,
-    selectedToken,
-    transferType
-  );
+  await depositErc20(transferAmount, signer, transferType);
 };
 
 const transferButton = async (
@@ -155,6 +150,7 @@ const transferButton = async (
   } else {
     // WalletState === Connected
     if (selectedTokenIsApproved) {
+      console.log(selectedToken);
       if (selectedToken.isNative) {
         transferNative(
           signer,
