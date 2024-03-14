@@ -5,9 +5,9 @@ import { getTransferAmountAndErrorCheck } from 'util/op/bridge';
 import { toast } from 'react-toastify';
 import * as notifStyles from 'misc/notifStyles';
 import { approve } from 'util/erc20';
-import { getDecimals } from "util/tokenUtils"
+import { getDecimals } from 'util/tokenUtils';
 import { ethers } from 'ethers';
-import {BridgeInterface} from "./bridgeInterface";
+import { BridgeInterface } from './bridgeInterface';
 
 enum WalletState {
   Disonnected,
@@ -58,7 +58,7 @@ const transferNative = async (
   decimals: number,
   transferType: TransferType,
   selectedToken: Token,
-  bridgeWrapper: BridgeInterface,
+  bridgeWrapper: BridgeInterface
 ) => {
   // TODO: check balance and surface errors
   const transferAmount = getTransferAmountAndErrorCheck(
@@ -83,7 +83,7 @@ const transferERC = async (
   amount: string,
   selectedToken: Token,
   transferType: TransferType,
-  bridgeWrapper: BridgeInterface,
+  bridgeWrapper: BridgeInterface
 ) => {
   const fromToken = parseFromToken(selectedToken, transferType);
   // TODO: check balance and surface errors
@@ -111,7 +111,6 @@ const transferERC = async (
     selectedToken,
     transferType
   );
-
 };
 
 const transferButton = async (
@@ -124,8 +123,7 @@ const transferButton = async (
   signer: any,
   amount: string,
   transferType: TransferType,
-  bridgeWrapper: BridgeInterface,
-
+  bridgeWrapper: BridgeInterface
 ) => {
   const fromToken = parseFromToken(selectedToken, transferType);
   if (walletState === WalletState.Disonnected) {
@@ -142,14 +140,18 @@ const transferButton = async (
           getDecimals(selectedToken, transferType === TransferType.Deposit),
           transferType,
           selectedToken,
-          bridgeWrapper,
+          bridgeWrapper
         );
       } else {
         transferERC(signer, amount, selectedToken, transferType, bridgeWrapper);
       }
     } else {
       try {
-        const transferAmount = getTransferAmountAndErrorCheck(signer, amount, getDecimals(selectedToken, transferType === TransferType.Deposit));
+        const transferAmount = getTransferAmountAndErrorCheck(
+          signer,
+          amount,
+          getDecimals(selectedToken, transferType === TransferType.Deposit)
+        );
         if (!transferAmount) {
           throw new Error('Invalid transfer amount');
         }
@@ -157,12 +159,10 @@ const transferButton = async (
           signer,
           parseFromToken(selectedToken, transferType),
           bridgeWrapper.getL1BridgeAddress(selectedToken),
-          transferAmount,
+          transferAmount
         );
         setSelectedTokenIsApproved(true);
-      } catch (error) {
-        
-      }
+      } catch (error) {}
     }
   }
 };
@@ -171,7 +171,7 @@ const approveBridgeTransfer = async (
   signer: any,
   fromToken: TokenInfo,
   l1StandardBridge: string,
-  amount: ethers.BigNumber,
+  amount: ethers.BigNumber
 ) => {
   if (!signer) {
     toast.error(notifStyles.msg.sig, notifStyles.standard); // TODO: cleaner
@@ -179,17 +179,22 @@ const approveBridgeTransfer = async (
   await approve(signer!, fromToken.address, l1StandardBridge, amount);
 };
 
-async function addChainToMetamask(chain: any, decimals: Number, tokenName: String, tokenSymbol: String) {
+async function addChainToMetamask(
+  chain: any,
+  decimals: Number,
+  tokenName: String,
+  tokenSymbol: String
+) {
   // @ts-ignore
   let ethereum: any = window.ethereum!;
-  let chainIdHex = ethers.utils.hexValue(BigInt((chain.chainId).toString()))
+  let chainIdHex = ethers.utils.hexValue(BigInt(chain.chainId.toString()));
   try {
     await ethereum!.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: chainIdHex }],
     });
   } catch (switchError: any) {
-    console.log(switchError)
+    console.log(switchError);
     // This error code indicates that the chain has not been added to MetaMask.
     if (switchError.code === 4902) {
       try {
@@ -209,11 +214,13 @@ async function addChainToMetamask(chain: any, decimals: Number, tokenName: Strin
           ],
         });
       } catch (addError) {
-        toast.error("Could not add rollup to wallet. Please contact us for help.");
+        toast.error(
+          'Could not add rollup to wallet. Please contact us for help.'
+        );
       }
     }
   }
-};
+}
 
 export {
   WalletState,
