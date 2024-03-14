@@ -21,8 +21,8 @@ import { useSigner, useConnect, useSwitchNetwork, chain } from 'wagmi';
 import { InjectedConnector } from 'wagmi/connectors/injected';
 import { cleanNumString, numStringToBigNumber } from 'util/format';
 import { BridgeConfig } from 'config/config';
-import {BridgeInterface} from "../util/bridgeInterface";
-import {NitroBridgeWrapper} from "../util/nitro/nitroBridge";
+import { BridgeInterface } from '../util/bridgeInterface';
+import { NitroBridgeWrapper } from '../util/nitro/nitroBridge';
 
 interface BridgeProps {
   transferType: TransferType;
@@ -38,6 +38,8 @@ const Deposit = (props: BridgeProps) => {
   const [selectedToken, setSelectedToken] = useState<Token>(tokens[0]);
   const [selectedTokenIsApproved, setSelectedTokenIsApproved] =
     useState<boolean>(true); // FIXME: assumes all tokens are approved, is this the case?
+  const [hasDepositTokenBalance, setHasDepositTokenBalance] =
+    useState<boolean>(false);
   // Talked to Parker, seems like we dont need to do approvals for L2 bridged assets. Keeping logic here for now in case that changes...
 
   const [amount, setAmount] = useState('');
@@ -63,10 +65,14 @@ const Deposit = (props: BridgeProps) => {
   const [fromBalance, setFromBalance] = useState<string>('');
   const [toBalance, setToBalance] = useState<string>('');
 
-  const bridgeWrapper: BridgeInterface = bridgeConfig.type === 'op' ?  new OpBridgeWrapper(
-      bridgeConfig,
-      props.l1AlternativeLogsProvider
-  ) : new NitroBridgeWrapper(bridgeConfig);
+  const bridgeWrapper: BridgeInterface =
+    bridgeConfig.type === 'op'
+      ? new OpBridgeWrapper(bridgeConfig, props.l1AlternativeLogsProvider)
+      : new NitroBridgeWrapper(bridgeConfig);
+
+  useEffect(() => {
+    setHasDepositTokenBalance(Number(fromBalance) >= Number(amount));
+  }, [fromBalance, amount]);
 
   // Update chain Id
   useEffect(() => {
@@ -119,11 +125,19 @@ const Deposit = (props: BridgeProps) => {
 
       const [l1bal, l2bal] = await getTokenBalance(addr, selectedToken);
       if (transferType === TransferType.Deposit) {
-        setFromBalance(ethers.utils.formatUnits(l1bal, getDecimals(selectedToken, true)));
-        setToBalance(ethers.utils.formatUnits(l2bal, getDecimals(selectedToken, false)));
+        setFromBalance(
+          ethers.utils.formatUnits(l1bal, getDecimals(selectedToken, true))
+        );
+        setToBalance(
+          ethers.utils.formatUnits(l2bal, getDecimals(selectedToken, false))
+        );
       } else {
-        setFromBalance(ethers.utils.formatUnits(l2bal, getDecimals(selectedToken, false)));
-        setToBalance(ethers.utils.formatUnits(l1bal, getDecimals(selectedToken, true)));
+        setFromBalance(
+          ethers.utils.formatUnits(l2bal, getDecimals(selectedToken, false))
+        );
+        setToBalance(
+          ethers.utils.formatUnits(l1bal, getDecimals(selectedToken, true))
+        );
       }
     };
     main();
@@ -133,14 +147,20 @@ const Deposit = (props: BridgeProps) => {
   // Check if selected token is approved
   useEffect(() => {
     const main = async () => {
-      if (parseInt(selectedToken.l1.address, 16) === 0 || transferType === TransferType.Withdraw) {
+      if (
+        parseInt(selectedToken.l1.address, 16) === 0 ||
+        transferType === TransferType.Withdraw
+      ) {
         setSelectedTokenIsApproved(true);
       } else {
         setSelectedTokenIsApproved(false);
         const selectedTokenAddress = selectedToken.l1.address;
-        const l1StandardBridgeAddress = bridgeWrapper.getL1BridgeAddress(selectedToken)
+        const l1StandardBridgeAddress =
+          bridgeWrapper.getL1BridgeAddress(selectedToken);
         const userAddress = await signer?.getAddress();
-        const provider = new ethers.providers.JsonRpcProvider(selectedToken.l1.rpcURL);
+        const provider = new ethers.providers.JsonRpcProvider(
+          selectedToken.l1.rpcURL
+        );
         if (!provider || !userAddress) {
           return;
         }
@@ -152,10 +172,12 @@ const Deposit = (props: BridgeProps) => {
         );
         if (
           Number(approvalAmount) >=
-          Number(numStringToBigNumber(
-            amount,
-            ethers.BigNumber.from(getDecimals(selectedToken, true))
-          ))
+          Number(
+            numStringToBigNumber(
+              amount,
+              ethers.BigNumber.from(getDecimals(selectedToken, true))
+            )
+          )
         ) {
           setSelectedTokenIsApproved(true);
         } else {
@@ -229,12 +251,14 @@ const Deposit = (props: BridgeProps) => {
               connect,
               switchNetwork,
               selectedToken,
+              hasDepositTokenBalance,
+              setHasDepositTokenBalance,
               selectedTokenIsApproved,
               setSelectedTokenIsApproved,
               signer,
               amount,
               transferType,
-              bridgeWrapper,
+              bridgeWrapper
             )
           }
         >
@@ -248,20 +272,28 @@ const Deposit = (props: BridgeProps) => {
         </button>
         <div className="flex justify-center">
           <button
-          className="text-[18px] font-custom text-colorSix font-medium mt-6 hover:text-colorSeven hover:font-medium"
-          onClick={() =>
-            {if (transferType === TransferType.Deposit) {
-              addChainToMetamask(tokens[0].l1, 18, 'Ether', 'ETH');
-            } else {
-              // FIXME: we assume all chains use 18 decimals for their native token
-              addChainToMetamask(tokens[0].l2, 18, tokens[0].tokenName, tokens[0].l2.symbol);
+            className="text-[18px] font-custom text-colorSix font-medium mt-6 hover:text-colorSeven hover:font-medium"
+            onClick={() => {
+              if (transferType === TransferType.Deposit) {
+                addChainToMetamask(tokens[0].l1, 18, 'Ether', 'ETH');
+              } else {
+                // FIXME: we assume all chains use 18 decimals for their native token
+                addChainToMetamask(
+                  tokens[0].l2,
+                  18,
+                  tokens[0].tokenName,
+                  tokens[0].l2.symbol
+                );
+              }
             }}
-          }
-        >
+          >
             Add chain to Metamask
           </button>
         </div>
-        <h2 className="font-custom text-sm text-center text-colorSix mt-8">Note: You need to add the chain to Metamask before bridging from the chain.</h2>
+        <h2 className="font-custom text-sm text-center text-colorSix mt-8">
+          Note: You need to add the chain to Metamask before bridging from the
+          chain.
+        </h2>
         {walletState === WalletState.Connected && amount && (
           <div className="mt-6">
             <div className="flex">
