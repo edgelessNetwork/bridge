@@ -83,7 +83,7 @@ var config = {
     l1RPCUrl: '',
     l2RPCUrl: '',
     type: 'op',
-  },
+},
 } as configFile;
 export default config;
 

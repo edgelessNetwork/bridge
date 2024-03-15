@@ -4,11 +4,12 @@ import { ConnectArgs } from '@wagmi/core/dist/declarations/src/actions/accounts/
 import { getTransferAmountAndErrorCheck } from 'util/op/bridge';
 import { toast } from 'react-toastify';
 import * as notifStyles from 'misc/notifStyles';
-import { approve } from 'util/erc20';
+import { approve, getBalance } from 'util/erc20';
 import { getDecimals } from 'util/tokenUtils';
 import { ethers } from 'ethers';
 import { BridgeInterface } from './bridgeInterface';
 import { depositEthTransaction } from './edgelessDeposit';
+import { getTokenBalance } from './nitro/nitroBridge';
 
 enum WalletState {
   Disonnected,
@@ -43,7 +44,7 @@ const buttonMessage = (
       return 'Fetching Balance...';
     }
     if (Number(amount) > Number(balance)) {
-      return 'Deposit';
+      return 'Deposit and Bridge';
     }
     if (selectedTokenIsApproved) {
       return transferType === TransferType.Deposit ? 'Deposit' : 'Withdraw';
@@ -175,7 +176,25 @@ const transferButton = async (
         } catch (error) {}
       }
     } else {
-      await depositEth(signer!, ethers.utils.parseEther(amount));
+      try {
+        const tx = await depositEth(signer!, ethers.utils.parseEther(amount));
+        toast.info(
+          notifStyles.msg.submitted(tx.hash, 'Depositing Eth'),
+          notifStyles.standard
+        );
+        await tx.wait();
+        if (tx.confirmations > 0) {
+          toast.success(notifStyles.msg.confirmed, notifStyles.standard);
+          const balance = await getBalance(
+            signer,
+            '0x2f1db8689e9E3870CD8928e58bf2bC7C02fF44fb',
+            await signer.getAddress()
+          );
+          setHasDepositTokenBalance(Number(balance) >= Number(amount));
+        }
+      } catch (error: any) {
+        toast.error('Rejected signature', notifStyles.standard);
+      }
     }
   }
 };
@@ -184,7 +203,7 @@ const depositEth = async (signer: any, amount: ethers.BigNumber) => {
   if (!signer) {
     toast.error(notifStyles.msg.sig, notifStyles.standard); // TODO: cleaner
   }
-  await depositEthTransaction(signer, await signer.getAddress(), amount);
+  return await depositEthTransaction(signer, await signer.getAddress(), amount);
 };
 
 const approveBridgeTransfer = async (
