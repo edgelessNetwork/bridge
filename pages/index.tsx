@@ -34,6 +34,7 @@ const Home: NextPage<clientConfigProps> = (props) => {
   const config = JSON.parse(props.config);
 
   const bridgeConfig: BridgeConfig = config.bridgeConfig;
+  //@ts-ignore
   bridgeConfig.type = props.type;
   const l1ChainId = config.tokens[0]?.l1?.chainId!;
   const l1AlternativeLogsProvider: string | undefined =

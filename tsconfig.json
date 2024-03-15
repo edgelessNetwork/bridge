@@ -22,5 +22,9 @@
     "esm": true
   },
   "include": ["src", "next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "paths": {
+    "react": [ "./node_modules/@types/react" ]
+  },
+  "allowSyntheticDefaultImports" : true
 }
