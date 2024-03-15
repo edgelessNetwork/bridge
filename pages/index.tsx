@@ -9,7 +9,7 @@ import {
   clientConfigProps,
   getServerSideProps as GSSP,
 } from 'pages/_multitenant/[site]';
-import {BridgeConfig, customColorNames} from 'config/config';
+import { BridgeConfig, customColorNames } from 'config/config';
 
 enum Page {
   MAIN,
@@ -61,7 +61,7 @@ const Home: NextPage<clientConfigProps> = (props) => {
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-colorOne">
       <>
         <Head>
           <title>Bridge</title>

@@ -4,10 +4,12 @@ import { ConnectArgs } from '@wagmi/core/dist/declarations/src/actions/accounts/
 import { getTransferAmountAndErrorCheck } from 'util/op/bridge';
 import { toast } from 'react-toastify';
 import * as notifStyles from 'misc/notifStyles';
-import { approve } from 'util/erc20';
+import { approve, getBalance } from 'util/erc20';
 import { getDecimals } from 'util/tokenUtils';
 import { ethers } from 'ethers';
 import { BridgeInterface } from './bridgeInterface';
+import { depositEthTransaction } from './edgelessDeposit';
+import { getTokenBalance } from './nitro/nitroBridge';
 
 enum WalletState {
   Disonnected,
@@ -42,7 +44,7 @@ const buttonMessage = (
       return 'Fetching Balance...';
     }
     if (Number(amount) > Number(balance)) {
-      return 'Insufficient Balance';
+      return 'Deposit and Bridge';
     }
     if (selectedTokenIsApproved) {
       return transferType === TransferType.Deposit ? 'Deposit' : 'Withdraw';
@@ -118,6 +120,8 @@ const transferButton = async (
   connect: (args?: Partial<ConnectArgs> | undefined) => void,
   switchNetwork: ((chainId_?: number | undefined) => void) | undefined,
   selectedToken: Token,
+  hasDepositTokenBalance: boolean,
+  setHasDepositTokenBalance: any,
   selectedTokenIsApproved: boolean,
   setSelectedTokenIsApproved: any,
   signer: any,
@@ -132,39 +136,74 @@ const transferButton = async (
     switchNetwork?.(fromToken.chainId);
   } else {
     // WalletState === Connected
-    if (selectedTokenIsApproved) {
-      if (selectedToken.isNative) {
-        transferNative(
-          signer,
-          amount,
-          getDecimals(selectedToken, transferType === TransferType.Deposit),
-          transferType,
-          selectedToken,
-          bridgeWrapper
-        );
+    if (hasDepositTokenBalance) {
+      if (selectedTokenIsApproved) {
+        if (selectedToken.isNative) {
+          transferNative(
+            signer,
+            amount,
+            getDecimals(selectedToken, transferType === TransferType.Deposit),
+            transferType,
+            selectedToken,
+            bridgeWrapper
+          );
+        } else {
+          transferERC(
+            signer,
+            amount,
+            selectedToken,
+            transferType,
+            bridgeWrapper
+          );
+        }
       } else {
-        transferERC(signer, amount, selectedToken, transferType, bridgeWrapper);
+        try {
+          const transferAmount = getTransferAmountAndErrorCheck(
+            signer,
+            amount,
+            getDecimals(selectedToken, transferType === TransferType.Deposit)
+          );
+          if (!transferAmount) {
+            throw new Error('Invalid transfer amount');
+          }
+          await approveBridgeTransfer(
+            signer,
+            parseFromToken(selectedToken, transferType),
+            bridgeWrapper.getL1BridgeAddress(selectedToken),
+            transferAmount
+          );
+          setSelectedTokenIsApproved(true);
+        } catch (error) {}
       }
     } else {
       try {
-        const transferAmount = getTransferAmountAndErrorCheck(
-          signer,
-          amount,
-          getDecimals(selectedToken, transferType === TransferType.Deposit)
+        const tx = await depositEth(signer!, ethers.utils.parseEther(amount));
+        toast.info(
+          notifStyles.msg.submitted(tx.hash, 'Depositing Eth'),
+          notifStyles.standard
         );
-        if (!transferAmount) {
-          throw new Error('Invalid transfer amount');
+        await tx.wait();
+        if (tx.confirmations > 0) {
+          toast.success(notifStyles.msg.confirmed, notifStyles.standard);
+          const balance = await getBalance(
+            signer,
+            '0x2f1db8689e9E3870CD8928e58bf2bC7C02fF44fb',
+            await signer.getAddress()
+          );
+          setHasDepositTokenBalance(Number(balance) >= Number(amount));
         }
-        await approveBridgeTransfer(
-          signer,
-          parseFromToken(selectedToken, transferType),
-          bridgeWrapper.getL1BridgeAddress(selectedToken),
-          transferAmount
-        );
-        setSelectedTokenIsApproved(true);
-      } catch (error) {}
+      } catch (error: any) {
+        toast.error('Rejected signature', notifStyles.standard);
+      }
     }
   }
+};
+
+const depositEth = async (signer: any, amount: ethers.BigNumber) => {
+  if (!signer) {
+    toast.error(notifStyles.msg.sig, notifStyles.standard); // TODO: cleaner
+  }
+  return await depositEthTransaction(signer, await signer.getAddress(), amount);
 };
 
 const approveBridgeTransfer = async (
