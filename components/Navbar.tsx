@@ -12,19 +12,19 @@ interface Link {
 const LINKS = [
   {
     title: 'About',
-    href: 'https://caldera.xyz/',
+    href: 'https://www.edgeless.network/',
   },
   {
     title: 'Docs',
-    href: 'https://calderaxyz.gitbook.io/caldera-documentation/getting-started/overview/',
+    href: 'https://docs.edgeless.network/',
   },
   {
     title: 'Twitter',
-    href: 'https://twitter.com/Calderaxyz',
+    href: 'https://twitter.com/EdgelessNetwork',
   },
   {
     title: 'Discord',
-    href: 'https://discord.gg/0xconstellation',
+    href: 'https://discord.edgeless.network',
   },
 ];
 const Navbar = (props: clientConfigProps) => {
