@@ -233,8 +233,13 @@ const Deposit = (props: BridgeProps) => {
         </div>
         {/* Section two */}
         <div className="bg-colorTwo shadow-xl rounded-lg h-36 p-4">
-          <div className="pb-4 font-colorSeven font-bridge text-colorSix">
-            You receive
+          <div className="flex justify-between pb-4">
+            <div className="pb-4 font-colorSeven font-bridge text-colorSix">
+              You receive
+            </div>
+            <div className=" font-colorSeven font-bridge text-colorSix">
+              Network: {toToken.name}
+            </div>
           </div>
           <div className="flex justify-between items-center h-[72px]">
             <div className="text-4xl text-colorSix">{`${amount || 0.0}`}</div>
@@ -311,7 +316,7 @@ const Deposit = (props: BridgeProps) => {
         </h2>
         {walletState === WalletState.Connected && amount && (
           <div className="mt-6">
-            <div className="flex">
+            <div className="flex text-colorSix">
               Estimated gas usage:{' '}
               <span className="ml-auto">{GAS_PER_NATIVE_DEPOSIT}</span>
             </div>
