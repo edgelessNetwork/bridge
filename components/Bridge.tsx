@@ -23,6 +23,7 @@ import { cleanNumString, numStringToBigNumber } from 'util/format';
 import { BridgeConfig } from 'config/config';
 import { BridgeInterface } from '../util/bridgeInterface';
 import { NitroBridgeWrapper } from '../util/nitro/nitroBridge';
+import { balanceOfEwEth } from 'util/edgeless/deposit';
 
 interface BridgeProps {
   transferType: TransferType;
@@ -37,9 +38,9 @@ const Deposit = (props: BridgeProps) => {
 
   const [selectedToken, setSelectedToken] = useState<Token>(tokens[0]);
   const [selectedTokenIsApproved, setSelectedTokenIsApproved] =
-    useState<boolean>(true); // FIXME: assumes all tokens are approved, is this the case?
+    useState<boolean>(false); // FIXME: assumes all tokens are approved, is this the case?
   // Talked to Parker, seems like we dont need to do approvals for L2 bridged assets. Keeping logic here for now in case that changes...
-
+  const [hasEwEthBalance, setHasEwEthBalance] = useState<boolean>(false);
   const [amount, setAmount] = useState('');
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [walletState, setWalletState] = useState(WalletState.Disonnected);
@@ -141,10 +142,7 @@ const Deposit = (props: BridgeProps) => {
   // Check if selected token is approved
   useEffect(() => {
     const main = async () => {
-      if (
-        parseInt(selectedToken.l1.address, 16) === 0 ||
-        transferType === TransferType.Withdraw
-      ) {
+      if (transferType === TransferType.Withdraw) {
         setSelectedTokenIsApproved(true);
       } else {
         setSelectedTokenIsApproved(false);
@@ -158,6 +156,7 @@ const Deposit = (props: BridgeProps) => {
         if (!provider || !userAddress) {
           return;
         }
+        console.log(selectedTokenAddress, userAddress, l1StandardBridgeAddress);
         const approvalAmount = await getApprovalAmount(
           provider,
           selectedTokenAddress,
@@ -181,6 +180,25 @@ const Deposit = (props: BridgeProps) => {
     };
     main();
   }, [signer, selectedToken, amount, setSelectedTokenIsApproved]);
+
+  // Check if user has enough eweth balance
+  useEffect(() => {
+    const main = async () => {
+      const provider = new ethers.providers.JsonRpcProvider(
+        selectedToken.l1.rpcURL
+      );
+      if (!provider || !signer) {
+        return;
+      }
+      const requiredAmount = numStringToBigNumber(
+        amount,
+        ethers.BigNumber.from(getDecimals(selectedToken, true))
+      );
+      const ewEthBalance = await balanceOfEwEth(signer);
+      setHasEwEthBalance(ewEthBalance.gte(requiredAmount));
+    };
+    main();
+  }, [signer, selectedToken, amount, setHasEwEthBalance]);
 
   const displayAddChainButton =
     walletState === WalletState.Connected &&
@@ -271,7 +289,9 @@ const Deposit = (props: BridgeProps) => {
               signer,
               amount,
               transferType,
-              bridgeWrapper
+              bridgeWrapper,
+              hasEwEthBalance,
+              setHasEwEthBalance
             )
           }
         >
@@ -280,7 +300,8 @@ const Deposit = (props: BridgeProps) => {
             amount,
             fromBalance,
             selectedTokenIsApproved,
-            transferType
+            transferType,
+            hasEwEthBalance
           )}
         </button>
         {displayAddChainButton && (

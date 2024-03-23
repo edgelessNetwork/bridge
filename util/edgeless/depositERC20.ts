@@ -1,10 +1,10 @@
 import { TransferType } from '../types';
-import { abi, address } from './ERC20Inbox.json';
+import ERC20InboxJSON from './ERC20Inbox.json';
 import { Token, TokenInfo } from 'config/config';
 import { BigNumber, Contract, Signer, ethers } from 'ethers';
 
-const erc20Inbox = address;
-const contract = new Contract(erc20Inbox, abi);
+const erc20Inbox = ERC20InboxJSON.address;
+const contract = new Contract(erc20Inbox, ERC20InboxJSON.abi);
 
 export async function depositErc20(
   amount: BigNumber, // This should be parsed and formatted before using it as an argument

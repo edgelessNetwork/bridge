@@ -1,20 +1,20 @@
 import { approve } from 'util/erc20';
 import { TransferType } from '../types';
-import { abi, address } from './EdgelessDeposit.json';
-import {
-  abi as ERC20InboxABI,
-  address as ERC20InboxAddress,
-} from './ERC20Inbox.json';
+import EdgelessDepositJSON from './EdgelessDeposit.json';
+import ERC20InboxJSON from './ERC20Inbox.json';
 
-import { abi as EwEthABI, address as EwEthAddress } from './EwEth.json';
+import EwEthJSON from './EwEth.json';
 
 import { Token } from 'config/config';
 import { BigNumber, Contract, Signer, ethers } from 'ethers';
 import { depositErc20 } from './depositERC20';
 
-const EdgelessDeposit = new Contract(address, abi);
-const ERC20Inbox = new Contract(ERC20InboxAddress, ERC20InboxABI);
-const EwETH = new Contract(EwEthAddress, EwEthABI);
+const EdgelessDeposit = new Contract(
+  EdgelessDepositJSON.address,
+  EdgelessDepositJSON.abi
+);
+const ERC20Inbox = new Contract(ERC20InboxJSON.address, ERC20InboxJSON.abi);
+const EwETH = new Contract(EwEthJSON.address, EwEthJSON.abi);
 
 export async function depositEth(
   amount: BigNumber, // This should be parsed and formatted before using it as an argument
@@ -27,9 +27,13 @@ export async function depositEth(
     isDeposit ? token.l2.rpcURL : token.l1.rpcURL
   );
   const userAddress = await signer.getAddress();
-  await EdgelessDeposit.connect(signer).depositEth(userAddress, {
+  return await EdgelessDeposit.connect(signer).depositEth(userAddress, {
     value: amount,
   });
-  await approve(signer, EwETH.address, ERC20Inbox.address, amount);
-  return await depositErc20(amount, signer, transferType);
+  // await approve(signer, EwETH.address, ERC20Inbox.address, amount);
+  // return await depositErc20(amount, signer, transferType);
+}
+
+export async function balanceOfEwEth(signer: Signer): Promise<BigNumber> {
+  return await EwETH.connect(signer).balanceOf(await signer.getAddress());
 }

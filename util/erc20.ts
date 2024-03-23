@@ -23,15 +23,15 @@ export const getBalance = async (
   } catch (error) {
     balance = 0;
   }
-  return balance
+  return balance;
 };
 
 export const approve = async (
   signer: ethers.Signer,
   erc20Address: string,
   spender: string,
-  amount: ethers.BigNumber,
-) => {
+  amount: ethers.BigNumber
+): Promise<ethers.ContractTransaction> => {
   const ERC20 = new ethers.Contract(erc20Address, ERC20abi, signer);
   return ERC20.approve(spender, amount);
 };

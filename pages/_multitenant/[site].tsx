@@ -25,7 +25,7 @@ const arbitrumNitroConfig: string = JSON.stringify({
       tokenName: 'Edgeless Wrapped Eth',
       l1: {
         chainId: 11155111,
-        address: '0x0000000000000000000000000000000000000000',
+        address: '0x2f1db8689e9E3870CD8928e58bf2bC7C02fF44fb',
         name: 'Sepolia',
         symbol: 'Eth',
         decimals: 18,

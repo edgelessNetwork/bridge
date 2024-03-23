@@ -28,7 +28,8 @@ const buttonMessage = (
   amount: string,
   balance: string,
   selectedTokenIsApproved: boolean,
-  transferType: TransferType
+  transferType: TransferType,
+  hasEwEthBalance: boolean
 ) => {
   if (walletState === WalletState.Disonnected) {
     return 'Connect Wallet';
@@ -40,12 +41,16 @@ const buttonMessage = (
       return 'Fetching Balance...';
     }
     if (Number(amount) > Number(balance)) {
-      return 'Insufficient Balance';
+      return 'Insufficient Eth Balance';
     }
-    if (selectedTokenIsApproved) {
-      return transferType === TransferType.Deposit ? 'Deposit' : 'Withdraw';
-    } else {
-      return 'Approve';
+    if (transferType === TransferType.Deposit) {
+      if (hasEwEthBalance && selectedTokenIsApproved) {
+        return 'Deposit';
+      } else if (hasEwEthBalance && !selectedTokenIsApproved) {
+        return 'Approve';
+      } else {
+        return 'Mint EwETH';
+      }
     }
   }
 };
@@ -127,7 +132,17 @@ const transferERC = async (
     toast.error(notifStyles.msg.no_l2_addr, notifStyles.standard);
     return;
   }
-  await depositErc20(transferAmount, signer, transferType);
+  const res = await depositErc20(transferAmount, signer, transferType);
+  toast.info(
+    notifStyles.msg.submitted(res.hash, selectedToken.l1.rpcURL),
+    notifStyles.standard
+  );
+  const wait = await res.wait(1);
+  if (wait.confirmations > 0) {
+    toast.success(notifStyles.msg.confirmed, notifStyles.standard);
+  } else {
+    throw '';
+  }
 };
 
 const transferButton = async (
@@ -140,7 +155,9 @@ const transferButton = async (
   signer: any,
   amount: string,
   transferType: TransferType,
-  bridgeWrapper: BridgeInterface
+  bridgeWrapper: BridgeInterface,
+  hasEwEthBalance: boolean,
+  setHasEwEthBalance: any // Should be a setState function
 ) => {
   const fromToken = parseFromToken(selectedToken, transferType);
   if (walletState === WalletState.Disonnected) {
@@ -149,38 +166,53 @@ const transferButton = async (
     switchNetwork?.(fromToken.chainId);
   } else {
     // WalletState === Connected
-    if (selectedTokenIsApproved) {
-      console.log(selectedToken);
-      if (selectedToken.isNative) {
-        transferNative(
+    if (hasEwEthBalance) {
+      if (selectedTokenIsApproved) {
+        await transferERC(
           signer,
           amount,
-          getDecimals(selectedToken, transferType === TransferType.Deposit),
-          transferType,
           selectedToken,
+          transferType,
           bridgeWrapper
         );
       } else {
-        transferERC(signer, amount, selectedToken, transferType, bridgeWrapper);
+        try {
+          const transferAmount = getTransferAmountAndErrorCheck(
+            signer,
+            amount,
+            getDecimals(selectedToken, transferType === TransferType.Deposit)
+          );
+          if (!transferAmount) {
+            throw new Error('Invalid transfer amount');
+          }
+          const res = await approveBridgeTransfer(
+            signer,
+            parseFromToken(selectedToken, transferType),
+            bridgeWrapper.getL1BridgeAddress(selectedToken),
+            transferAmount
+          );
+          toast.info(
+            notifStyles.msg.submitted(res.hash, selectedToken.l1.rpcURL),
+            notifStyles.standard
+          );
+          const wait = await res.wait(1);
+          if (wait.confirmations > 0) {
+            toast.success(notifStyles.msg.confirmed, notifStyles.standard);
+          } else {
+            throw '';
+          }
+          setSelectedTokenIsApproved(true);
+        } catch (error) {}
       }
     } else {
-      try {
-        const transferAmount = getTransferAmountAndErrorCheck(
-          signer,
-          amount,
-          getDecimals(selectedToken, transferType === TransferType.Deposit)
-        );
-        if (!transferAmount) {
-          throw new Error('Invalid transfer amount');
-        }
-        await approveBridgeTransfer(
-          signer,
-          parseFromToken(selectedToken, transferType),
-          bridgeWrapper.getL1BridgeAddress(selectedToken),
-          transferAmount
-        );
-        setSelectedTokenIsApproved(true);
-      } catch (error) {}
+      transferNative(
+        signer,
+        amount,
+        getDecimals(selectedToken, transferType === TransferType.Deposit),
+        transferType,
+        selectedToken,
+        bridgeWrapper
+      );
     }
   }
 };
@@ -190,11 +222,11 @@ const approveBridgeTransfer = async (
   fromToken: TokenInfo,
   l1StandardBridge: string,
   amount: ethers.BigNumber
-) => {
+): Promise<ethers.ContractTransaction> => {
   if (!signer) {
     toast.error(notifStyles.msg.sig, notifStyles.standard); // TODO: cleaner
   }
-  await approve(signer!, fromToken.address, l1StandardBridge, amount);
+  return await approve(signer!, fromToken.address, l1StandardBridge, amount);
 };
 
 async function addChainToMetamask(
