@@ -9,8 +9,9 @@ import { getDecimals } from 'util/tokenUtils';
 import { ethers } from 'ethers';
 import { BridgeInterface } from './bridgeInterface';
 import { TransferType } from './types';
-import { depositEth } from './edgeless/deposit';
+import { balanceOfEwEth, depositEth } from './edgeless/deposit';
 import { depositErc20 } from './edgeless/depositERC20';
+import { numStringToBigNumber } from './format';
 
 enum WalletState {
   Disonnected,
@@ -39,9 +40,6 @@ const buttonMessage = (
     // WalletState === Connected
     if (amount && balance === '') {
       return 'Fetching Balance...';
-    }
-    if (Number(amount) > Number(balance)) {
-      return 'Insufficient Eth Balance';
     }
     if (transferType === TransferType.Deposit) {
       if (hasEwEthBalance && selectedTokenIsApproved) {
@@ -205,7 +203,7 @@ const transferButton = async (
         } catch (error) {}
       }
     } else {
-      transferNative(
+      await transferNative(
         signer,
         amount,
         getDecimals(selectedToken, transferType === TransferType.Deposit),
@@ -213,6 +211,18 @@ const transferButton = async (
         selectedToken,
         bridgeWrapper
       );
+      const provider = new ethers.providers.JsonRpcProvider(
+        selectedToken.l1.rpcURL
+      );
+      if (!provider || !signer) {
+        return;
+      }
+      const requiredAmount = numStringToBigNumber(
+        amount,
+        ethers.BigNumber.from(getDecimals(selectedToken, true))
+      );
+      const ewEthBalance = await balanceOfEwEth(signer);
+      setHasEwEthBalance(ewEthBalance.gte(requiredAmount));
     }
   }
 };
