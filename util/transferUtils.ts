@@ -41,6 +41,9 @@ const buttonMessage = (
     if (amount && balance === '') {
       return 'Fetching Balance...';
     }
+    if (!amount || amount === '0') {
+      return 'Enter Amount';
+    }
     if (transferType === TransferType.Deposit) {
       if (hasEwEthBalance && selectedTokenIsApproved) {
         return 'Deposit';
@@ -137,7 +140,7 @@ const transferERC = async (
   );
   const wait = await res.wait(1);
   if (wait.confirmations > 0) {
-    toast.success(notifStyles.msg.confirmed, notifStyles.standard);
+    toast.success(notifStyles.msg.depositConfirmed, notifStyles.standard);
   } else {
     throw '';
   }

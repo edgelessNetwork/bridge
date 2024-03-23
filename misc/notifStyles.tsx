@@ -15,6 +15,7 @@ const msg = {
   failed: 'Transaction failed',
   submitted,
   confirmed: 'Transaction confirmed',
+  depositConfirmed: 'Deposit confirmed, check the Transactions page for status',
 };
 
 const standard: ToastOptions = {
